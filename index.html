@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>GoaLMint – Habit Tracker</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+</head>
+<body class="theme-growth">
+  <!-- LOGIN SCREEN -->
+  <div id="login-screen" class="screen active">
+    <div class="login-container">
+      <h1 class="app-logo">🌿 GoaLMint</h1>
+      <p class="tagline">Build habits that stick.</p>
+      <div id="auth-forms">
+        <!-- Login Form -->
+        <form id="login-form" autocomplete="off">
+          <input type="email" id="login-email" placeholder="Email" required>
+          <input type="password" id="login-password" placeholder="Password" required>
+          <button type="submit">Log In</button>
+          <p class="switch-form">Don't have an account? <a href="#" id="show-signup">Sign Up</a></p>
+        </form>
+        <!-- Signup Form (hidden) -->
+        <form id="signup-form" class="hidden" autocomplete="off">
+          <input type="text" id="signup-username" placeholder="Username" required>
+          <input type="email" id="signup-email" placeholder="Email" required>
+          <input type="number" id="signup-age" placeholder="Age" min="1">
+          <input type="number" id="signup-weight" placeholder="Weight (kg)" step="0.1">
+          <input type="password" id="signup-password" placeholder="Password" required>
+          <button type="submit">Create Account</button>
+          <p class="switch-form">Already have an account? <a href="#" id="show-login">Log In</a></p>
+        </form>
+      </div>
+      <div id="auth-error" class="error-msg"></div>
+    </div>
+  </div>
+
+  <!-- MAIN APP SCREEN -->
+  <div id="app-screen" class="screen">
+    <!-- Header -->
+    <header>
+      <div class="header-left">
+        <h1 class="app-logo-small">🌿 GoaLMint</h1>
+      </div>
+      <div class="header-right">
+        <span id="user-level-display" class="level-badge">Lv.1</span>
+        <span id="xp-display" class="xp-badge">0 XP</span>
+      </div>
+    </header>
+
+    <!-- Tab navigation -->
+    <nav class="bottom-nav">
+      <button class="nav-btn active" data-view="dashboard-view">📊 Dashboard</button>
+      <button class="nav-btn" data-view="settings-view">⚙️ Settings</button>
+      <button class="nav-btn" data-view="profile-view">👤 Profile</button>
+    </nav>
+
+    <!-- Content area -->
+    <main id="main-content">
+      <!-- Dashboard View -->
+      <section id="dashboard-view" class="view active">
+        <div class="greeting">
+          <h2 id="greeting-text">Good morning!</h2>
+          <p id="current-date"></p>
+        </div>
+
+        <div class="streak-summary">
+          <div class="streak-card">🔥 <span id="current-streak">0</span> day streak</div>
+        </div>
+
+        <div id="morning-routines" class="routine-section">
+          <h3>🌅 Morning Routine</h3>
+          <div id="morning-habits" class="habit-list"></div>
+        </div>
+        <div id="evening-routines" class="routine-section">
+          <h3>🌙 Evening Routine</h3>
+          <div id="evening-habits" class="habit-list"></div>
+        </div>
+        <div id="general-habits-section" class="routine-section">
+          <h3>📌 All Habits</h3>
+          <div id="general-habits" class="habit-list"></div>
+        </div>
+
+        <button id="add-habit-btn" class="fab">+</button>
+      </section>
+
+      <!-- Settings View -->
+      <section id="settings-view" class="view">
+        <h2>Settings</h2>
+        <div class="setting-group">
+          <label>Theme</label>
+          <select id="theme-select">
+            <option value="growth">🌱 Growth</option>
+            <option value="modern">🚀 Modern Productivity</option>
+            <option value="darkmode">🌙 Dark Mode Focus</option>
+            <option value="golden">✨ Golden Momentum</option>
+            <option value="midnight">🌑 Midnight Focus</option>
+          </select>
+        </div>
+        <div class="setting-group">
+          <label>Tracking Mode</label>
+          <select id="tracking-mode-select">
+            <option value="intense">Intense – no misses allowed</option>
+            <option value="moderate">Moderate – 1 miss/week</option>
+            <option value="normal">Normal – 2 misses/week</option>
+          </select>
+        </div>
+        <div class="setting-group">
+          <button id="share-progress-btn">📤 Share Progress</button>
+        </div>
+        <div class="setting-group">
+          <button id="show-achievements-btn">🏆 Achievements</button>
+        </div>
+        <div class="setting-group">
+          <button id="show-privacy-btn">🔒 Privacy Policy</button>
+        </div>
+      </section>
+
+      <!-- Profile View -->
+      <section id="profile-view" class="view">
+        <h2>Profile</h2>
+        <div class="profile-info">
+          <p><strong>Username:</strong> <span id="profile-username"></span></p>
+          <p><strong>Email:</strong> <span id="profile-email"></span></p>
+          <p><strong>Age:</strong> <span id="profile-age"></span></p>
+          <p><strong>Weight:</strong> <span id="profile-weight"></span> kg</p>
+        </div>
+        <button id="edit-profile-btn">✏️ Edit Profile</button>
+        <button id="logout-btn">🚪 Logout</button>
+        <button id="delete-account-btn" class="danger">⚠️ Delete Account</button>
+      </section>
+    </main>
+
+    <!-- Modals -->
+    <div id="add-habit-modal" class="modal">
+      <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h2>Add New Habit</h2>
+        <form id="habit-form">
+          <input type="text" id="habit-name" placeholder="Habit name" required>
+          <textarea id="habit-description" placeholder="Notes / description"></textarea>
+          <fieldset>
+            <legend>Repeat on days</legend>
+            <div class="days-checkboxes">
+              <label><input type="checkbox" value="0"> Sun</label>
+              <label><input type="checkbox" value="1" checked> Mon</label>
+              <label><input type="checkbox" value="2" checked> Tue</label>
+              <label><input type="checkbox" value="3" checked> Wed</label>
+              <label><input type="checkbox" value="4" checked> Thu</label>
+              <label><input type="checkbox" value="5" checked> Fri</label>
+              <label><input type="checkbox" value="6"> Sat</label>
+            </div>
+          </fieldset>
+          <div class="form-group">
+            <label>Reminder times (HH:MM, comma separated)</label>
+            <input type="text" id="reminder-times" placeholder="08:00, 20:00">
+          </div>
+          <div class="form-group">
+            <label>Routine</label>
+            <select id="habit-routine">
+              <option value="general">General</option>
+              <option value="morning">Morning</option>
+              <option value="evening">Evening</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Icon / Emoji</label>
+            <input type="text" id="habit-emoji" placeholder="🏃‍♂️" maxlength="2">
+          </div>
+          <button type="submit">Create Habit</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Calendar Modal -->
+    <div id="calendar-modal" class="modal">
+      <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h2>Habit Calendar</h2>
+        <select id="calendar-habit-select"></select>
+        <div id="calendar-grid"></div>
+      </div>
+    </div>
+
+    <!-- Profile Edit Modal -->
+    <div id="edit-profile-modal" class="modal">
+      <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h2>Edit Profile</h2>
+        <form id="edit-profile-form">
+          <input type="text" id="edit-username" placeholder="Username">
+          <input type="number" id="edit-age" placeholder="Age">
+          <input type="number" id="edit-weight" placeholder="Weight (kg)" step="0.1">
+          <button type="submit">Save</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Achievements Modal -->
+    <div id="achievements-modal" class="modal">
+      <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h2>Your Achievements</h2>
+        <div id="achievements-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
