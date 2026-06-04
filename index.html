@@ -11,9 +11,14 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
 <body class="theme-growth">
-  <!-- LOGIN SCREEN -->
-  <div id="login-screen" class="screen active">
-    <div class="login-container">
+  <!-- LOADING OVERLAY (hidden after auth state resolved) -->
+  <div id="loading-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:var(--text);">
+    <div style="text-align:center;">🌿 GoaLMint<br><small style="opacity:0.7;">Loading...</small></div>
+  </div>
+
+  <!-- LOGIN SCREEN (hidden by default) -->
+  <div id="login-screen" class="screen" style="display:none;">
+    <div class="login-container card">
       <h1 class="app-logo">🌿 GoaLMint</h1>
       <p class="tagline">Build habits that stick.</p>
       <div id="auth-forms">
@@ -36,24 +41,25 @@
         </form>
       </div>
       <div id="auth-error" class="error-msg"></div>
+      <p style="text-align:center;margin-top:20px;font-size:0.85rem;color:var(--text-secondary);">Powered by <strong>SK Technologies</strong></p>
     </div>
   </div>
 
-  <!-- MAIN APP SCREEN -->
-  <div id="app-screen" class="screen">
+  <!-- MAIN APP SCREEN (hidden until logged in) -->
+  <div id="app-screen" class="screen" style="display:none;">
     <!-- Header -->
-    <header>
+    <header class="card">
       <div class="header-left">
         <h1 class="app-logo-small">🌿 GoaLMint</h1>
       </div>
       <div class="header-right">
-        <span id="user-level-display" class="level-badge">Lv.1</span>
-        <span id="xp-display" class="xp-badge">0 XP</span>
+        <span id="user-level-display" class="badge">Lv.1</span>
+        <span id="xp-display" class="badge">0 XP</span>
       </div>
     </header>
 
     <!-- Tab navigation -->
-    <nav class="bottom-nav">
+    <nav class="bottom-nav card">
       <button class="nav-btn active" data-view="dashboard-view">📊 Dashboard</button>
       <button class="nav-btn" data-view="settings-view">⚙️ Settings</button>
       <button class="nav-btn" data-view="profile-view">👤 Profile</button>
@@ -63,35 +69,49 @@
     <main id="main-content">
       <!-- Dashboard View -->
       <section id="dashboard-view" class="view active">
-        <div class="greeting">
-          <h2 id="greeting-text">Good morning!</h2>
-          <p id="current-date"></p>
+        <div class="card greeting">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <h2 id="greeting-text">Good morning!</h2>
+              <p id="current-date"></p>
+            </div>
+            <div class="progress-ring-container">
+              <svg class="progress-ring" width="70" height="70">
+                <circle class="progress-ring-circle-bg" stroke="var(--text-secondary)" stroke-width="6" fill="transparent" r="28" cx="35" cy="35"/>
+                <circle id="progress-ring-circle" stroke="var(--success)" stroke-width="6" fill="transparent" r="28" cx="35" cy="35" stroke-dasharray="175.93" stroke-dashoffset="175.93" stroke-linecap="round" transform="rotate(-90 35 35)"/>
+              </svg>
+              <span id="progress-percent" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-weight:bold; font-size:0.9rem;">0%</span>
+            </div>
+          </div>
         </div>
 
-        <div class="streak-summary">
+        <div class="card streak-summary">
           <div class="streak-card">🔥 <span id="current-streak">0</span> day streak</div>
         </div>
 
-        <div id="morning-routines" class="routine-section">
+        <div id="motivational-quote" class="card" style="text-align:center; font-style:italic;"></div>
+
+        <div id="morning-routines" class="routine-section card">
           <h3>🌅 Morning Routine</h3>
           <div id="morning-habits" class="habit-list"></div>
         </div>
-        <div id="evening-routines" class="routine-section">
+        <div id="evening-routines" class="routine-section card">
           <h3>🌙 Evening Routine</h3>
           <div id="evening-habits" class="habit-list"></div>
         </div>
-        <div id="general-habits-section" class="routine-section">
+        <div id="general-habits-section" class="routine-section card">
           <h3>📌 All Habits</h3>
           <div id="general-habits" class="habit-list"></div>
         </div>
 
         <button id="add-habit-btn" class="fab">+</button>
+        <button id="quick-calendar-btn" class="fab" style="bottom:140px; background:var(--primary);">📅</button>
       </section>
 
       <!-- Settings View -->
       <section id="settings-view" class="view">
-        <h2>Settings</h2>
-        <div class="setting-group">
+        <h2 class="card">Settings</h2>
+        <div class="card setting-group">
           <label>Theme</label>
           <select id="theme-select">
             <option value="growth">🌱 Growth</option>
@@ -101,7 +121,15 @@
             <option value="midnight">🌑 Midnight Focus</option>
           </select>
         </div>
-        <div class="setting-group">
+        <div class="card setting-group">
+          <label>Dark / Light Mode</label>
+          <button id="toggle-dark-mode">🌓 Toggle Dark Mode</button>
+        </div>
+        <div class="card setting-group">
+          <label>Custom Accent Color</label>
+          <input type="color" id="custom-accent-color" value="#2f855a">
+        </div>
+        <div class="card setting-group">
           <label>Tracking Mode</label>
           <select id="tracking-mode-select">
             <option value="intense">Intense – no misses allowed</option>
@@ -109,35 +137,46 @@
             <option value="normal">Normal – 2 misses/week</option>
           </select>
         </div>
-        <div class="setting-group">
+        <div class="card setting-group">
           <button id="share-progress-btn">📤 Share Progress</button>
         </div>
-        <div class="setting-group">
+        <div class="card setting-group">
           <button id="show-achievements-btn">🏆 Achievements</button>
         </div>
-        <div class="setting-group">
+        <div class="card setting-group">
+          <button id="show-reports-btn">📊 Reports</button>
+        </div>
+        <div class="card setting-group">
+          <button id="show-leaderboard-btn">🏅 Leaderboard</button>
+        </div>
+        <div class="card setting-group">
           <button id="show-privacy-btn">🔒 Privacy Policy</button>
         </div>
+        <div class="card setting-group">
+          <button id="show-faq-btn">❓ FAQ</button>
+        </div>
+        <p style="text-align:center; font-size:0.85rem; color:var(--text-secondary);">Powered by <strong>SK Technologies</strong></p>
       </section>
 
       <!-- Profile View -->
       <section id="profile-view" class="view">
-        <h2>Profile</h2>
-        <div class="profile-info">
+        <h2 class="card">Profile</h2>
+        <div class="card profile-info">
           <p><strong>Username:</strong> <span id="profile-username"></span></p>
           <p><strong>Email:</strong> <span id="profile-email"></span></p>
           <p><strong>Age:</strong> <span id="profile-age"></span></p>
           <p><strong>Weight:</strong> <span id="profile-weight"></span> kg</p>
         </div>
-        <button id="edit-profile-btn">✏️ Edit Profile</button>
-        <button id="logout-btn">🚪 Logout</button>
-        <button id="delete-account-btn" class="danger">⚠️ Delete Account</button>
+        <button id="edit-profile-btn" class="card">✏️ Edit Profile</button>
+        <button id="logout-btn" class="card">🚪 Logout</button>
+        <button id="delete-account-btn" class="card danger">⚠️ Delete Account</button>
+        <p style="text-align:center; font-size:0.85rem; color:var(--text-secondary); margin-top:20px;">Powered by <strong>SK Technologies</strong></p>
       </section>
     </main>
 
     <!-- Modals -->
     <div id="add-habit-modal" class="modal">
-      <div class="modal-content">
+      <div class="modal-content card">
         <span class="close-modal">&times;</span>
         <h2>Add New Habit</h2>
         <form id="habit-form">
@@ -178,7 +217,7 @@
 
     <!-- Calendar Modal -->
     <div id="calendar-modal" class="modal">
-      <div class="modal-content">
+      <div class="modal-content card">
         <span class="close-modal">&times;</span>
         <h2>Habit Calendar</h2>
         <select id="calendar-habit-select"></select>
@@ -188,7 +227,7 @@
 
     <!-- Profile Edit Modal -->
     <div id="edit-profile-modal" class="modal">
-      <div class="modal-content">
+      <div class="modal-content card">
         <span class="close-modal">&times;</span>
         <h2>Edit Profile</h2>
         <form id="edit-profile-form">
@@ -202,10 +241,95 @@
 
     <!-- Achievements Modal -->
     <div id="achievements-modal" class="modal">
-      <div class="modal-content">
+      <div class="modal-content card">
         <span class="close-modal">&times;</span>
         <h2>Your Achievements</h2>
         <div id="achievements-list"></div>
+      </div>
+    </div>
+
+    <!-- Reports Modal -->
+    <div id="reports-modal" class="modal">
+      <div class="modal-content card">
+        <span class="close-modal">&times;</span>
+        <h2>Reports</h2>
+        <div id="reports-content"></div>
+      </div>
+    </div>
+
+    <!-- Leaderboard Modal -->
+    <div id="leaderboard-modal" class="modal">
+      <div class="modal-content card">
+        <span class="close-modal">&times;</span>
+        <h2>Leaderboard</h2>
+        <div id="leaderboard-list"></div>
+      </div>
+    </div>
+
+    <!-- Privacy Policy Modal -->
+    <div id="privacy-modal" class="modal">
+      <div class="modal-content card">
+        <span class="close-modal">&times;</span>
+        <h2>Privacy Policy</h2>
+        <div class="legal-text">
+          <p><strong>Last Updated: June 2026</strong></p>
+          <p>SK Technologies operates this Habit Tracking App.</p>
+          <h3>Information We Collect</h3>
+          <ul>
+            <li>Habit data and progress information you choose to enter.</li>
+            <li>Account information such as email address (if account registration is available).</li>
+            <li>Device information necessary for app functionality and analytics.</li>
+          </ul>
+          <h3>How We Use Information</h3>
+          <ul>
+            <li>To provide and improve the app.</li>
+            <li>To track your habits and display progress statistics.</li>
+            <li>To send notifications and reminders that you enable.</li>
+            <li>To improve app performance and user experience.</li>
+          </ul>
+          <h3>Data Sharing</h3>
+          <p>We do not sell your personal information. We may share data with trusted service providers that help us operate the app, such as cloud storage or analytics services.</p>
+          <h3>Data Security</h3>
+          <p>We take reasonable measures to protect your information from unauthorized access, disclosure, or misuse.</p>
+          <h3>Your Rights</h3>
+          <p>You may request deletion of your account and associated data by contacting us.</p>
+          <h3>Children's Privacy</h3>
+          <p>Our app is not intended for children under 13 years of age.</p>
+          <h3>Changes to This Policy</h3>
+          <p>We may update this Privacy Policy from time to time. Changes will be posted within the app.</p>
+          <h3>Contact Us</h3>
+          <p>SK Technologies<br>Email: sakalatechnologies00@gmail.com</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAQ Modal -->
+    <div id="faq-modal" class="modal">
+      <div class="modal-content card">
+        <span class="close-modal">&times;</span>
+        <h2>Frequently Asked Questions</h2>
+        <div class="legal-text">
+          <h4>1. What is this app?</h4>
+          <p>This app helps you build positive habits and track your daily progress.</p>
+          <h4>2. Is the app free?</h4>
+          <p>Yes, the basic features are free to use. Additional premium features may be introduced in the future.</p>
+          <h4>3. How do I create a habit?</h4>
+          <p>Tap the "Add Habit" button, enter your habit details, and choose a schedule.</p>
+          <h4>4. How are streaks calculated?</h4>
+          <p>A streak increases each time you complete a habit on its scheduled day.</p>
+          <h4>5. Can I edit or delete a habit?</h4>
+          <p>Yes. Open the habit and select Edit or Delete.</p>
+          <h4>6. Will I receive reminders?</h4>
+          <p>Yes, if notifications are enabled on your device.</p>
+          <h4>7. Is my data secure?</h4>
+          <p>We use reasonable security measures to protect your data.</p>
+          <h4>8. Can I use the app offline?</h4>
+          <p>Yes. Most habit tracking features work without an internet connection.</p>
+          <h4>9. How do I delete my data?</h4>
+          <p>Contact SK Technologies support or use the account deletion option if available.</p>
+          <h4>10. How can I contact support?</h4>
+          <p>Email: sakalatechnologies00@gmail.com</p>
+        </div>
       </div>
     </div>
   </div>
