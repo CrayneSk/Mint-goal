@@ -1,4 +1,6 @@
-// Firebase config
+// script.js – GoaLMint Habit Tracker
+// Make sure this script is loaded after the HTML body, or wrap in DOMContentLoaded.
+// Firebase config – replace with your own if needed
 const firebaseConfig = {
   apiKey: "AIzaSyCWVNHO-YCKX0xFMvVsAx2vByquADBMDrQ",
   authDomain: "goal-mint.firebaseapp.com",
@@ -8,420 +10,365 @@ const firebaseConfig = {
   appId: "1:251716328908:web:f268362ed2ba17ab9f5169",
   measurementId: "G-NMCQP75NL7"
 };
+
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
 // Global state
-let currentUser = null, userDocRef = null, habits = [];
-let userSettings = { theme: 'growth', trackingMode: 'intense', customAccent: '#2f855a' };
-const motivationalQuotes = [
-  "Small steps every day lead to big results.",
-  "Consistency is the secret of success.",
-  "You are what you repeatedly do.",
-  "Don't break the chain!",
-  "One habit at a time, one day at a time."
-];
+let currentUser = null;
+let userDocRef = null;
+let habits = [];
+let currentRoutine = 'morning'; // 'morning' or 'evening'
+let editingHabitId = null;
 
-// DOM references (abbreviated for brevity, full list in original)
-const loadingOverlay = document.getElementById('loading-overlay');
-const loginScreen = document.getElementById('login-screen');
-const appScreen = document.getElementById('app-screen');
-const views = document.querySelectorAll('.view');
-const navBtns = document.querySelectorAll('.nav-btn');
-const loginForm = document.getElementById('login-form');
-const signupForm = document.getElementById('signup-form');
-const showSignup = document.getElementById('show-signup');
-const showLogin = document.getElementById('show-login');
-const authError = document.getElementById('auth-error');
-const greetingText = document.getElementById('greeting-text');
-const currentDateEl = document.getElementById('current-date');
-const morningHabitsDiv = document.getElementById('morning-habits');
-const eveningHabitsDiv = document.getElementById('evening-habits');
-const generalHabitsDiv = document.getElementById('general-habits');
-const addHabitBtn = document.getElementById('add-habit-btn');
-const quickCalendarBtn = document.getElementById('quick-calendar-btn');
-const habitForm = document.getElementById('habit-form');
-const addHabitModal = document.getElementById('add-habit-modal');
-const calendarModal = document.getElementById('calendar-modal');
-const editProfileModal = document.getElementById('edit-profile-modal');
-const achievementsModal = document.getElementById('achievements-modal');
-const reportsModal = document.getElementById('reports-modal');
-const leaderboardModal = document.getElementById('leaderboard-modal');
-const privacyModal = document.getElementById('privacy-modal');
-const faqModal = document.getElementById('faq-modal');
-const closeModalBtns = document.querySelectorAll('.close-modal');
-const themeSelect = document.getElementById('theme-select');
-const toggleDarkBtn = document.getElementById('toggle-dark-mode');
-const customAccentInput = document.getElementById('custom-accent-color');
-const trackingModeSelect = document.getElementById('tracking-mode-select');
-const shareProgressBtn = document.getElementById('share-progress-btn');
-const showAchievementsBtn = document.getElementById('show-achievements-btn');
-const showReportsBtn = document.getElementById('show-reports-btn');
-const showLeaderboardBtn = document.getElementById('show-leaderboard-btn');
-const showPrivacyBtn = document.getElementById('show-privacy-btn');
-const showFaqBtn = document.getElementById('show-faq-btn');
-const logoutBtn = document.getElementById('logout-btn');
-const deleteAccountBtn = document.getElementById('delete-account-btn');
-const editProfileBtn = document.getElementById('edit-profile-btn');
-const editProfileForm = document.getElementById('edit-profile-form');
-const calendarHabitSelect = document.getElementById('calendar-habit-select');
-const calendarGrid = document.getElementById('calendar-grid');
-const progressRing = document.getElementById('progress-ring-circle');
-const progressPercent = document.getElementById('progress-percent');
-const currentStreakSpan = document.getElementById('current-streak');
-const motivationalQuoteDiv = document.getElementById('motivational-quote');
+// Wait until DOM is fully loaded
+document.addEventListener('DOMContentLoaded', () => {
 
-// ---------- AUTH with instant load ----------
-let authReady = false;
-auth.onAuthStateChanged(async (user) => {
-  authReady = true;
-  if (user) {
-    currentUser = user;
-    userDocRef = db.collection('users').doc(user.uid);
-    await loadUserData();
-    loginScreen.style.display = 'none';
-    appScreen.style.display = 'flex';
-    appScreen.style.flexDirection = 'column';
-    initApp();
-  } else {
-    currentUser = null;
-    appScreen.style.display = 'none';
-    loginScreen.style.display = 'flex';
+  // ---------- DOM ELEMENTS (match the provided HTML) ----------
+  const loginScreen        = document.getElementById('loginScreen');
+  const registerScreen     = document.getElementById('registerScreen');
+  const dashboardScreen    = document.getElementById('dashboardScreen');
+  const habitFormScreen    = document.getElementById('habitFormScreen');
+  const settingsScreen     = document.getElementById('settingsScreen');
+  const loginEmail         = document.getElementById('loginEmail');
+  const loginPassword      = document.getElementById('loginPassword');
+  const loginBtn           = document.getElementById('loginBtn');
+  const showRegisterBtn    = document.getElementById('showRegisterBtn');
+  const regEmail           = document.getElementById('regEmail');
+  const regUsername        = document.getElementById('regUsername');
+  const regAge             = document.getElementById('regAge');
+  const regWeight          = document.getElementById('regWeight');
+  const regPassword        = document.getElementById('regPassword');
+  const registerBtn        = document.getElementById('registerBtn');
+  const backToLoginBtn     = document.getElementById('backToLoginBtn');
+  const userGreeting       = document.getElementById('userGreeting');
+  const totalHabitsSpan    = document.getElementById('totalHabits');
+  const currentStreakSpan  = document.getElementById('currentStreak');
+  const habitListContainer = document.getElementById('habitListContainer');
+  const tabMorning         = document.getElementById('tabMorning');
+  const tabEvening         = document.getElementById('tabEvening');
+  const addHabitFAB        = document.getElementById('addHabitFAB');
+  const goToSettingsBtn    = document.getElementById('goToSettingsBtn');
+  const logoutBtn          = document.getElementById('logoutBtn');
+  const habitName          = document.getElementById('habitName');
+  const habitRepeat        = document.getElementById('habitRepeat');
+  const habitTime          = document.getElementById('habitTime');
+  const habitNotes         = document.getElementById('habitNotes');
+  const habitRoutine       = document.getElementById('habitRoutine');
+  const saveHabitBtn       = document.getElementById('saveHabitBtn');
+  const cancelHabitBtn     = document.getElementById('cancelHabitBtn');
+  const formTitle          = document.getElementById('formTitle');
+  const trackingMode       = document.getElementById('trackingMode');
+  const deleteAccountBtn   = document.getElementById('deleteAccountBtn');
+  const backFromSettingsBtn= document.getElementById('backFromSettingsBtn');
+  const themeOptions       = document.querySelectorAll('.theme-option');
+
+  // ---------- SCREEN SWITCHING ----------
+  function showScreen(screen) {
+    loginScreen.classList.add('hidden');    // using hidden class to hide
+    registerScreen.classList.add('hidden');
+    dashboardScreen.classList.add('hidden');
+    habitFormScreen.classList.add('hidden');
+    settingsScreen.classList.add('hidden');
+    screen.classList.remove('hidden');
   }
-  loadingOverlay.style.display = 'none'; // hide loading
-});
+  // Alternatively, toggle 'active' if that's how the CSS works.
+  // But the original HTML used .screen.active. We'll stick to that.
+  function showScreenById(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
 
-// Pre-check if already logged in to avoid flash
-if (auth.currentUser) {
-  // already logged in, but onAuthStateChanged will fire anyway
-} else {
-  // show login after a tiny delay to avoid blank screen
-  setTimeout(() => {
-    if (!authReady) loadingOverlay.style.display = 'none';
-  }, 1000);
-}
+  // Override the above simple function with the correct one:
+  function switchToScreen(screenElement) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    screenElement.classList.add('active');
+  }
 
-// Auth forms
-showSignup.addEventListener('click', e => { e.preventDefault(); loginForm.classList.add('hidden'); signupForm.classList.remove('hidden'); });
-showLogin.addEventListener('click', e => { e.preventDefault(); signupForm.classList.add('hidden'); loginForm.classList.remove('hidden'); });
-loginForm.addEventListener('submit', async e => {
-  e.preventDefault();
-  try { await auth.signInWithEmailAndPassword(loginForm.email.value, loginForm.password.value); } catch(err) { authError.textContent = err.message; }
-});
-signupForm.addEventListener('submit', async e => {
-  e.preventDefault();
-  try {
-    const cred = await auth.createUserWithEmailAndPassword(signupForm.email.value, signupForm.password.value);
-    await db.collection('users').doc(cred.user.uid).set({
-      username: signupForm.username.value, email: signupForm.email.value, age: signupForm.age.value || '', weight: signupForm.weight.value || '',
-      totalXP: 0, level: 1, badges: [], settings: { theme: 'growth', trackingMode: 'intense', customAccent: '#2f855a' }
-    });
-    // Update leaderboard
-    await db.collection('leaderboard').doc(cred.user.uid).set({ username: signupForm.username.value, xp: 0 });
-  } catch(err) { authError.textContent = err.message; }
-});
+  // ---------- AUTH ----------
+  auth.onAuthStateChanged(async (user) => {
+    currentUser = user;
+    if (user) {
+      userDocRef = db.collection('users').doc(user.uid);
+      await loadUserData();
+      switchToScreen(dashboardScreen);
+      await loadHabits();
+      renderDashboard();
+      applySavedTheme();
+    } else {
+      // clear fields
+      if (loginEmail) loginEmail.value = '';
+      if (loginPassword) loginPassword.value = '';
+      switchToScreen(loginScreen);
+    }
+  });
 
-// ---------- USER DATA ----------
-async function loadUserData() {
-  const doc = await userDocRef.get();
-  if (doc.exists) {
-    const data = doc.data();
-    userSettings = data.settings || { theme: 'growth', trackingMode: 'intense', customAccent: '#2f855a' };
-    document.getElementById('profile-username').textContent = data.username || '';
-    document.getElementById('profile-email').textContent = data.email || '';
-    document.getElementById('profile-age').textContent = data.age || '-';
-    document.getElementById('profile-weight').textContent = data.weight || '-';
-    document.getElementById('user-level-display').textContent = `Lv.${data.level || 1}`;
-    document.getElementById('xp-display').textContent = `${data.totalXP || 0} XP`;
-    if (userSettings.customAccent) {
-      document.documentElement.style.setProperty('--custom-accent', userSettings.customAccent);
-      customAccentInput.value = userSettings.customAccent;
+  // Login / Register
+  showRegisterBtn.addEventListener('click', () => switchToScreen(registerScreen));
+  backToLoginBtn.addEventListener('click', () => switchToScreen(loginScreen));
+
+  loginBtn.addEventListener('click', async () => {
+    try {
+      await auth.signInWithEmailAndPassword(loginEmail.value.trim(), loginPassword.value);
+    } catch (err) {
+      alert('Login error: ' + err.message);
+    }
+  });
+
+  registerBtn.addEventListener('click', async () => {
+    const email = regEmail.value.trim();
+    const pass = regPassword.value;
+    const username = regUsername.value.trim();
+    const age = regAge.value;
+    const weight = regWeight.value;
+    try {
+      const cred = await auth.createUserWithEmailAndPassword(email, pass);
+      await db.collection('users').doc(cred.user.uid).set({
+        email, username, age, weight,
+        totalXP: 0, level: 1, badges: [],
+        settings: { theme: 'midnight', trackingMode: 'normal' }
+      });
+      await db.collection('leaderboard').doc(cred.user.uid).set({ username, xp: 0 });
+    } catch (err) {
+      alert('Registration error: ' + err.message);
+    }
+  });
+
+  logoutBtn.addEventListener('click', () => auth.signOut());
+
+  // ---------- USER DATA ----------
+  async function loadUserData() {
+    const doc = await userDocRef.get();
+    if (doc.exists) {
+      const data = doc.data();
+      userGreeting.textContent = `👋 ${data.username || 'User'}`;
+      if (data.settings) {
+        trackingMode.value = data.settings.trackingMode || 'normal';
+        applyTheme(data.settings.theme || 'midnight');
+      }
     }
   }
-}
 
-function initApp() {
-  applyTheme(userSettings.theme);
-  themeSelect.value = userSettings.theme;
-  trackingModeSelect.value = userSettings.trackingMode;
-  setGreeting();
-  loadHabits();
-  requestNotificationPermission();
-  startReminderCheck();
-  scheduleMissedCheck();
-  updateCurrentDate();
-  showRandomQuote();
-}
-
-// ---------- THEMES ----------
-function applyTheme(theme) {
-  document.body.className = `theme-${theme}`;
-  localStorage.setItem('goalMintTheme', theme);
-}
-themeSelect.addEventListener('change', async () => {
-  const newTheme = themeSelect.value;
-  applyTheme(newTheme);
-  if (currentUser) { userSettings.theme = newTheme; await userDocRef.update({ 'settings.theme': newTheme }); }
-});
-toggleDarkBtn.addEventListener('click', () => {
-  const isDark = document.body.className.includes('midnight') || document.body.className.includes('darkmode') || document.body.className.includes('golden');
-  const newTheme = isDark ? 'growth' : 'midnight';
-  applyTheme(newTheme);
-  themeSelect.value = newTheme;
-  if (currentUser) { userSettings.theme = newTheme; userDocRef.update({ 'settings.theme': newTheme }); }
-});
-customAccentInput.addEventListener('input', async () => {
-  const color = customAccentInput.value;
-  document.documentElement.style.setProperty('--custom-accent', color);
-  if (currentUser) { userSettings.customAccent = color; await userDocRef.update({ 'settings.customAccent': color }); }
-});
-trackingModeSelect.addEventListener('change', async () => {
-  userSettings.trackingMode = trackingModeSelect.value;
-  await userDocRef.update({ 'settings.trackingMode': userSettings.trackingMode });
-});
-
-// ---------- HABITS ----------
-async function loadHabits() {
-  const snapshot = await userDocRef.collection('habits').get();
-  habits = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-  renderDashboard();
-}
-function getTodayDayNumber() { return new Date().getDay(); }
-function getTodayString() { return new Date().toISOString().split('T')[0]; }
-function habitScheduledToday(h) { return h.repeatDays.includes(getTodayDayNumber()); }
-function isCompletedToday(h) { return h.lastCompletedDate === getTodayString(); }
-
-function renderDashboard() {
-  const todayDay = getTodayDayNumber();
-  const morning = [], evening = [], general = [];
-  habits.forEach(h => {
-    if (!habitScheduledToday(h)) return;
-    if (h.routine === 'morning') morning.push(h);
-    else if (h.routine === 'evening') evening.push(h);
-    else general.push(h);
-  });
-  renderHabitList(morningHabitsDiv, morning);
-  renderHabitList(eveningHabitsDiv, evening);
-  renderHabitList(generalHabitsDiv, general);
-  updateProgressRing();
-  updateOverallStreak();
-}
-
-function renderHabitList(container, arr) {
-  container.innerHTML = '';
-  if (arr.length === 0) { container.innerHTML = '<p style="color:var(--text-secondary);">No habits yet</p>'; return; }
-  arr.forEach(h => {
-    const card = document.createElement('div');
-    card.className = 'habit-card';
-    const completed = isCompletedToday(h);
-    card.innerHTML = `<div class="habit-info"><span class="habit-emoji">${h.emoji||'✅'}</span><span class="habit-name">${h.name}</span><span class="habit-streak">🔥${h.streak||0}</span></div>
-      <button class="habit-complete-btn" data-id="${h.id}" ${completed?'disabled':''}>${completed?'Done':'Complete'}</button>`;
-    container.appendChild(card);
-  });
-  container.querySelectorAll('.habit-complete-btn').forEach(btn => btn.addEventListener('click', async e => {
-    await completeHabit(e.target.dataset.id);
-  }));
-}
-
-async function completeHabit(habitId) {
-  const habitRef = userDocRef.collection('habits').doc(habitId);
-  const habit = habits.find(h => h.id === habitId);
-  if (!habit || isCompletedToday(habit)) return;
-  const today = getTodayString();
-  const yesterday = new Date(Date.now()-86400000).toISOString().split('T')[0];
-  let newStreak = habit.streak || 0;
-  if (habit.lastCompletedDate === yesterday) newStreak++;
-  else if (habit.lastCompletedDate !== today) newStreak = 1;
-  const completedDates = habit.completedDates || [];
-  if (!completedDates.includes(today)) completedDates.push(today);
-  await habitRef.update({ lastCompletedDate: today, streak: newStreak, completedDates });
-  // XP & leaderboard
-  const userDoc = await userDocRef.get();
-  const data = userDoc.data();
-  const xpGain = 10;
-  const newXP = (data.totalXP||0) + xpGain;
-  const newLevel = Math.floor(newXP/100)+1;
-  const badges = [...(data.badges||[])];
-  if (newStreak===7 && !badges.includes('7-day-streak')) badges.push('7-day-streak');
-  if (newStreak===30 && !badges.includes('30-day-streak')) badges.push('30-day-streak');
-  if (newLevel > (data.level||1)) badges.push(`level-${newLevel}`);
-  await userDocRef.update({ totalXP: newXP, level: newLevel, badges });
-  await db.collection('leaderboard').doc(currentUser.uid).set({ username: data.username, xp: newXP }, {merge:true});
-  document.getElementById('user-level-display').textContent = `Lv.${newLevel}`;
-  document.getElementById('xp-display').textContent = `${newXP} XP`;
-  // Motivational message
-  motivationalQuoteDiv.textContent = `“${motivationalQuotes[Math.floor(Math.random()*motivationalQuotes.length)]}”`;
-  loadHabits();
-}
-
-function updateProgressRing() {
-  const todayHabits = habits.filter(h => habitScheduledToday(h));
-  const total = todayHabits.length;
-  const completed = todayHabits.filter(h => isCompletedToday(h)).length;
-  const percent = total ? Math.round((completed/total)*100) : 0;
-  const circumference = 2 * Math.PI * 28; // r=28
-  const offset = circumference - (percent/100)*circumference;
-  progressRing.style.strokeDasharray = circumference;
-  progressRing.style.strokeDashoffset = offset;
-  progressPercent.textContent = `${percent}%`;
-}
-
-function updateOverallStreak() {
-  let max = 0;
-  habits.forEach(h => { if (habitScheduledToday(h) && h.streak > max) max = h.streak; });
-  currentStreakSpan.textContent = max;
-}
-
-// Add habit
-addHabitBtn.addEventListener('click', () => addHabitModal.style.display='block');
-quickCalendarBtn.addEventListener('click', openCalendar);
-habitForm.addEventListener('submit', async e => {
-  e.preventDefault();
-  const name = document.getElementById('habit-name').value;
-  const desc = document.getElementById('habit-description').value;
-  const days = Array.from(document.querySelectorAll('#habit-form input[type="checkbox"]:checked')).map(cb=>parseInt(cb.value));
-  const reminders = document.getElementById('reminder-times').value.split(',').map(s=>s.trim()).filter(Boolean);
-  const routine = document.getElementById('habit-routine').value;
-  const emoji = document.getElementById('habit-emoji').value || '✅';
-  await userDocRef.collection('habits').add({
-    name, description: desc, repeatDays: days, reminderTimes: reminders, routine, emoji,
-    streak:0, lastCompletedDate:null, completedDates:[], createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  });
-  habitForm.reset();
-  addHabitModal.style.display='none';
-  loadHabits();
-});
-
-// ---------- NAVIGATION ----------
-navBtns.forEach(btn => btn.addEventListener('click', () => {
-  navBtns.forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  views.forEach(v=>v.classList.remove('active'));
-  document.getElementById(btn.dataset.view).classList.add('active');
-  if (btn.dataset.view === 'dashboard-view') loadHabits();
-}));
-
-// ---------- MODALS ----------
-closeModalBtns.forEach(b=>b.addEventListener('click', ()=>{
-  document.querySelectorAll('.modal').forEach(m=>m.style.display='none');
-}));
-window.addEventListener('click', e=>{ if(e.target.classList.contains('modal')) e.target.style.display='none'; });
-
-// Calendar
-async function openCalendar() {
-  calendarHabitSelect.innerHTML = '';
-  habits.forEach(h=>{ let o=document.createElement('option'); o.value=h.id; o.textContent=h.name; calendarHabitSelect.appendChild(o); });
-  calendarModal.style.display='block';
-  renderCalendar(habits[0]?.id);
-}
-calendarHabitSelect.addEventListener('change', ()=>renderCalendar(calendarHabitSelect.value));
-function renderCalendar(habitId) {
-  const h = habits.find(x=>x.id===habitId); if(!h) return;
-  const now = new Date(), y=now.getFullYear(), m=now.getMonth();
-  const firstDay = new Date(y,m,1).getDay(), daysInMonth = new Date(y,m+1,0).getDate();
-  let html='<div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>';
-  for(let i=0;i<firstDay;i++) html+='<div></div>';
-  for(let d=1;d<=daysInMonth;d++){
-    const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    html+=`<div class="calendar-day${h.completedDates?.includes(dateStr)?' completed':''}">${d}</div>`;
+  // ---------- HABITS CRUD ----------
+  async function loadHabits() {
+    const snap = await userDocRef.collection('habits').get();
+    habits = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   }
-  calendarGrid.innerHTML=html;
-}
 
-// Reports
-showReportsBtn.addEventListener('click', async ()=>{
-  reportsModal.style.display='block';
-  const snapshot = await userDocRef.collection('habits').get();
-  const allHabits = snapshot.docs.map(d=>({id:d.id,...d.data()}));
-  const todayStr = getTodayString();
-  const weekAgo = new Date(Date.now()-7*86400000).toISOString().split('T')[0];
-  const monthAgo = new Date(Date.now()-30*86400000).toISOString().split('T')[0];
-  let daily=0, weekly=0, monthly=0;
-  allHabits.forEach(h=>{
-    if(h.completedDates?.includes(todayStr)) daily++;
-    if(h.completedDates?.some(d=>d>=weekAgo)) weekly++;
-    if(h.completedDates?.some(d=>d>=monthAgo)) monthly++;
+  function getTodayStr() {
+    return new Date().toISOString().split('T')[0];
+  }
+
+  function isToday(dateStr) {
+    return dateStr === getTodayStr();
+  }
+
+  function habitScheduledToday(habit) {
+    const repeat = habit.repeat || 'daily';
+    const day = new Date().getDay(); // 0=Sun
+    if (repeat === 'daily') return true;
+    if (repeat === 'mon-fri') return day >= 1 && day <= 5;
+    if (repeat === 'weekly') return true; // simplified
+    return false;
+  }
+
+  function renderDashboard() {
+    const morningHabits = habits.filter(h => h.routine === 'morning' && habitScheduledToday(h));
+    const eveningHabits = habits.filter(h => h.routine === 'evening' && habitScheduledToday(h));
+    const displayHabits = currentRoutine === 'morning' ? morningHabits : eveningHabits;
+
+    totalHabitsSpan.textContent = habits.length;
+    let maxStreak = 0;
+    habits.forEach(h => { if (h.streak > maxStreak) maxStreak = h.streak; });
+    currentStreakSpan.textContent = maxStreak;
+
+    habitListContainer.innerHTML = displayHabits.length ? displayHabits.map(h => {
+      const completedToday = isToday(h.lastCompletedDate);
+      return `
+        <div class="habit-item">
+          <div style="flex:1;">
+            <strong>${h.name}</strong>
+            <div style="font-size:0.8rem; color:var(--text-secondary);">${h.time || 'any'} • ${h.repeat}</div>
+            ${h.notes ? `<small>${h.notes}</small>` : ''}
+          </div>
+          <div style="display:flex; gap:0.5rem; align-items:center;">
+            <span class="streak-badge">${h.streak || 0}</span>
+            <button class="btn complete-btn" data-id="${h.id}" ${completedToday ? 'disabled' : ''} style="width:auto; padding:0.4rem 0.8rem;">
+              ${completedToday ? '✓' : 'Done'}
+            </button>
+            <button class="btn edit-btn" data-id="${h.id}" style="width:auto; padding:0.4rem;"><i class="fas fa-edit"></i></button>
+          </div>
+        </div>
+      `;
+    }).join('') : '<p style="color:var(--text-secondary); text-align:center;">No habits for this routine</p>';
+
+    // Attach events
+    document.querySelectorAll('.complete-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const id = e.currentTarget.dataset.id;
+        await completeHabit(id);
+      });
+    });
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = e.currentTarget.dataset.id;
+        openEditHabit(id);
+      });
+    });
+  }
+
+  async function completeHabit(habitId) {
+    const habitRef = userDocRef.collection('habits').doc(habitId);
+    const habit = habits.find(h => h.id === habitId);
+    if (!habit || isToday(habit.lastCompletedDate)) return;
+
+    const today = getTodayStr();
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+    let newStreak = (habit.streak || 0);
+    if (habit.lastCompletedDate === yesterday) newStreak++;
+    else newStreak = 1;
+
+    await habitRef.update({ lastCompletedDate: today, streak: newStreak });
+
+    // Update XP and leaderboard
+    const userDoc = await userDocRef.get();
+    const data = userDoc.data();
+    const newXP = (data.totalXP || 0) + 10;
+    const newLevel = Math.floor(newXP / 100) + 1;
+    const badges = [...(data.badges || [])];
+    if (newStreak === 7 && !badges.includes('7-day-streak')) badges.push('7-day-streak');
+    if (newStreak === 30 && !badges.includes('30-day-streak')) badges.push('30-day-streak');
+    if (newLevel > (data.level || 1)) badges.push(`level-${newLevel}`);
+    await userDocRef.update({ totalXP: newXP, level: newLevel, badges });
+    await db.collection('leaderboard').doc(currentUser.uid).set({ username: data.username, xp: newXP }, { merge: true });
+
+    await loadHabits();
+    renderDashboard();
+  }
+
+  function openEditHabit(id) {
+    const habit = habits.find(h => h.id === id);
+    if (!habit) return;
+    editingHabitId = id;
+    formTitle.textContent = 'Edit Habit';
+    habitName.value = habit.name;
+    habitRepeat.value = habit.repeat || 'daily';
+    habitTime.value = habit.time || '08:00';
+    habitNotes.value = habit.notes || '';
+    habitRoutine.value = habit.routine || 'morning';
+    switchToScreen(habitFormScreen);
+  }
+
+  addHabitFAB.addEventListener('click', () => {
+    editingHabitId = null;
+    formTitle.textContent = 'New Habit';
+    habitName.value = '';
+    habitRepeat.value = 'daily';
+    habitTime.value = '08:00';
+    habitNotes.value = '';
+    habitRoutine.value = 'morning';
+    switchToScreen(habitFormScreen);
   });
-  document.getElementById('reports-content').innerHTML = `
-    <p>Today completed: <strong>${daily}</strong> habits</p>
-    <p>Last 7 days: <strong>${weekly}</strong> completions</p>
-    <p>Last 30 days: <strong>${monthly}</strong> completions</p>
-  `;
-});
 
-// Leaderboard
-showLeaderboardBtn.addEventListener('click', async ()=>{
-  leaderboardModal.style.display='block';
-  const snap = await db.collection('leaderboard').orderBy('xp','desc').limit(20).get();
-  let html = '<ol>';
-  snap.forEach(doc=>{ const d=doc.data(); html+=`<li>${d.username} – ${d.xp} XP</li>`; });
-  html+='</ol>';
-  document.getElementById('leaderboard-list').innerHTML=html;
-});
+  saveHabitBtn.addEventListener('click', async () => {
+    const name = habitName.value.trim();
+    if (!name) return alert('Please enter a habit name.');
+    const habitData = {
+      name,
+      repeat: habitRepeat.value,
+      time: habitTime.value,
+      notes: habitNotes.value,
+      routine: habitRoutine.value,
+      streak: editingHabitId ? (habits.find(h => h.id === editingHabitId)?.streak || 0) : 0,
+      lastCompletedDate: editingHabitId ? (habits.find(h => h.id === editingHabitId)?.lastCompletedDate || null) : null
+    };
+    if (editingHabitId) {
+      await userDocRef.collection('habits').doc(editingHabitId).update(habitData);
+    } else {
+      await userDocRef.collection('habits').add(habitData);
+    }
+    switchToScreen(dashboardScreen);
+    await loadHabits();
+    renderDashboard();
+  });
 
-// Achievements
-showAchievementsBtn.addEventListener('click', async ()=>{
-  achievementsModal.style.display='block';
-  const doc=await userDocRef.get(); const badges=doc.data().badges||[];
-  document.getElementById('achievements-list').innerHTML = badges.length ? badges.map(b=>`<p>🏅 ${b.replace(/-/g,' ')}</p>`).join('') : '<p>No achievements yet.</p>';
-});
+  cancelHabitBtn.addEventListener('click', () => switchToScreen(dashboardScreen));
 
-// Share
-shareProgressBtn.addEventListener('click', async ()=>{
-  const doc=await userDocRef.get(); const d=doc.data();
-  const text=`I'm level ${d.level} on GoaLMint with ${d.totalXP} XP!`;
-  if(navigator.share) navigator.share({title:'GoaLMint',text});
-  else alert('Copy: '+text);
-});
+  // Tabs
+  tabMorning.addEventListener('click', () => {
+    currentRoutine = 'morning';
+    tabMorning.classList.add('active');
+    tabEvening.classList.remove('active');
+    renderDashboard();
+  });
+  tabEvening.addEventListener('click', () => {
+    currentRoutine = 'evening';
+    tabEvening.classList.add('active');
+    tabMorning.classList.remove('active');
+    renderDashboard();
+  });
 
-// Profile edit/logout/delete (unchanged)
-editProfileBtn.addEventListener('click', ()=>{ editProfileModal.style.display='block'; document.getElementById('edit-username').value=document.getElementById('profile-username').textContent; document.getElementById('edit-age').value=document.getElementById('profile-age').textContent; document.getElementById('edit-weight').value=document.getElementById('profile-weight').textContent; });
-editProfileForm.addEventListener('submit', async e=>{ e.preventDefault(); await userDocRef.update({ username: document.getElementById('edit-username').value, age: document.getElementById('edit-age').value, weight: document.getElementById('edit-weight').value }); editProfileModal.style.display='none'; loadUserData(); });
-logoutBtn.addEventListener('click', ()=>auth.signOut());
-deleteAccountBtn.addEventListener('click', async ()=>{ if(confirm('Delete account?')){ await userDocRef.delete(); await db.collection('leaderboard').doc(currentUser.uid).delete(); await currentUser.delete(); } });
+  // Settings
+  goToSettingsBtn.addEventListener('click', () => switchToScreen(settingsScreen));
+  backFromSettingsBtn.addEventListener('click', () => switchToScreen(dashboardScreen));
 
-// Privacy/FAQ
-showPrivacyBtn.addEventListener('click', ()=>privacyModal.style.display='block');
-showFaqBtn.addEventListener('click', ()=>faqModal.style.display='block');
+  trackingMode.addEventListener('change', async () => {
+    if (currentUser) {
+      await userDocRef.update({ 'settings.trackingMode': trackingMode.value });
+    }
+  });
 
-// Notifications & reminders
-function requestNotificationPermission(){ if(Notification.permission==='default') Notification.requestPermission(); }
-function startReminderCheck(){
-  setInterval(()=>{
-    if(!currentUser) return;
-    const now=new Date(), timeStr=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-    habits.forEach(h=>{
-      if(!habitScheduledToday(h)||isCompletedToday(h)) return;
-      if(h.reminderTimes?.includes(timeStr) && Notification.permission==='granted'){
-        new Notification(`⏰ ${h.name}`,{body:'Time to complete!',icon:'/icon.png'});
+  deleteAccountBtn.addEventListener('click', async () => {
+    if (confirm('Delete your account and all data?')) {
+      await userDocRef.delete();
+      await db.collection('leaderboard').doc(currentUser.uid).delete();
+      await currentUser.delete();
+    }
+  });
+
+  // ---------- THEMES ----------
+  function applyTheme(theme) {
+    document.body.className = `theme-${theme}`;
+    themeOptions.forEach(opt => {
+      opt.classList.toggle('selected', opt.dataset.theme === theme);
+    });
+    localStorage.setItem('goalMintTheme', theme);
+  }
+
+  function applySavedTheme() {
+    const saved = localStorage.getItem('goalMintTheme') || 'midnight';
+    applyTheme(saved);
+  }
+
+  themeOptions.forEach(opt => {
+    opt.addEventListener('click', async () => {
+      const theme = opt.dataset.theme;
+      applyTheme(theme);
+      if (currentUser) {
+        await userDocRef.update({ 'settings.theme': theme });
       }
     });
-  },60000);
-}
-function scheduleMissedCheck(){
-  const now = new Date();
-  const msToMidnight = new Date(now.getFullYear(),now.getMonth(),now.getDate()+1).getTime() - now.getTime();
-  setTimeout(()=>{
-    if(!currentUser) return;
-    const todayStr = getTodayString();
-    habits.forEach(h=>{
-      if(habitScheduledToday(h) && h.lastCompletedDate!==todayStr && Notification.permission==='granted'){
-        new Notification(`⚠️ Missed: ${h.name}`,{body:'You missed this habit today.',icon:'/icon.png'});
+  });
+
+  // Initial theme load (before user logs in)
+  applySavedTheme();
+
+  // ---------- NOTIFICATIONS (optional) ----------
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+  setInterval(() => {
+    if (!currentUser) return;
+    const now = new Date();
+    const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    habits.forEach(h => {
+      if (h.time === timeStr && habitScheduledToday(h) && !isToday(h.lastCompletedDate)) {
+        if (Notification.permission === 'granted') {
+          new Notification(`⏰ ${h.name}`, { body: 'Time to complete your habit!' });
+        }
       }
     });
-    scheduleMissedCheck(); // repeat daily
-  }, msToMidnight + 60000); // one minute after midnight
-}
+  }, 60000);
 
-// Greeting & quote
-function setGreeting(){
-  const h=new Date().getHours();
-  greetingText.textContent = h<12?'Good morning!':h<18?'Good afternoon!':'Good evening!';
-}
-function updateCurrentDate(){ currentDateEl.textContent=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}); }
-function showRandomQuote(){ motivationalQuoteDiv.textContent = `“${motivationalQuotes[Math.floor(Math.random()*motivationalQuotes.length)]}”`; }
-
-// Load saved theme quickly
-const savedTheme = localStorage.getItem('goalMintTheme');
-if(savedTheme) applyTheme(savedTheme);
+}); // end DOMContentLoaded
