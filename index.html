@@ -2,338 +2,516 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>GoaLMint – Habit Tracker</title>
-  <link rel="stylesheet" href="style.css">
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <title>GoaLMint • Habit Tracker</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    :root {
+      --bg: #000;
+      --bg-card: #181818;
+      --text: #fff;
+      --text-secondary: #aaa;
+      --accent: #d4af37;
+      --accent-text: #000;
+      --input-bg: #1a1a1a;
+      --input-border: #333;
+      --btn-bg: #222;
+    }
+    body {
+      margin:0; font-family:system-ui, sans-serif; background:var(--bg); color:var(--text);
+      display:flex; justify-content:center; align-items:center; min-height:100vh;
+      transition: background 0.3s, color 0.3s;
+    }
+    body.theme-growth { --bg:#f0f7f0; --bg-card:#fff; --text:#1a1a1a; --text-secondary:#555; --accent:#2e7d32; --accent-text:#fff; --input-bg:#fff; --input-border:#c8e6c9; --btn-bg:#e8f5e9; }
+    body.theme-productivity { --bg:#f8fafc; --bg-card:#fff; --text:#0f172a; --text-secondary:#475569; --accent:#1e3a8a; --accent-text:#fff; --input-bg:#fff; --input-border:#cbd5e1; --btn-bg:#e2e8f0; }
+    body.theme-darkfocus { --bg:#0f0f2e; --bg-card:#1e1e3f; --text:#e0e0ff; --text-secondary:#aaaacc; --accent:#2563eb; --accent-text:#fff; --input-bg:#252550; --input-border:#404080; --btn-bg:#2a2a4a; }
+    body.theme-golden { --bg:#111; --bg-card:#222; --text:#fff; --text-secondary:#ccc; --accent:#d4af37; --accent-text:#000; --input-bg:#2a2a2a; --input-border:#444; --btn-bg:#333; }
+    body.theme-midnight { --bg:#000; --bg-card:#181818; --text:#fff; --text-secondary:#aaa; --accent:#2e7d32; --accent-text:#fff; --input-bg:#1a1a1a; --input-border:#333; --btn-bg:#1a1a1a; }
+
+    #app {
+      width:100%; max-width:500px; background:var(--bg-card); border-radius:2rem; box-shadow:0 20px 40px rgba(0,0,0,0.5);
+      height:95vh; max-height:850px; display:flex; flex-direction:column; overflow:hidden;
+    }
+    .screen { display:none; flex-direction:column; height:100%; padding:1.5rem; overflow-y:auto; }
+    .screen.active { display:flex; }
+    .btn {
+      background:var(--btn-bg); border:none; padding:0.8rem 1.5rem; border-radius:2rem; font-weight:600;
+      color:var(--text); cursor:pointer; transition:0.2s; display:inline-flex; align-items:center;
+      justify-content:center; gap:0.5rem; width:100%; margin:0.3rem 0;
+    }
+    .btn-primary { background:var(--accent); color:var(--accent-text); }
+    .btn-outline { background:transparent; border:1px solid var(--input-border); }
+    .btn-danger { background:#b91c1c; color:white; }
+    input, select, textarea {
+      background:var(--input-bg); border:1px solid var(--input-border); border-radius:1.5rem;
+      padding:0.9rem 1.2rem; color:var(--text); width:100%; margin:0.4rem 0; outline:none; font-size:1rem;
+    }
+    input:focus, select:focus { border-color:var(--accent); }
+    .card { background:var(--bg-card); border-radius:1.5rem; padding:1.2rem; margin:0.5rem 0; }
+    .habit-item { display:flex; justify-content:space-between; align-items:center; background:var(--bg); border-radius:1.5rem; padding:0.9rem 1.2rem; margin:0.5rem 0; }
+    .streak-badge { background:var(--accent); color:var(--accent-text); border-radius:50%; min-width:32px; height:32px; display:flex; align-items:center; justify-content:center; font-weight:bold; }
+    .tabs { display:flex; gap:0.5rem; margin:1rem 0; }
+    .tab { flex:1; text-align:center; padding:0.7rem; border-radius:2rem; background:var(--btn-bg); cursor:pointer; color:var(--text-secondary); }
+    .tab.active { background:var(--accent); color:var(--accent-text); }
+    .theme-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; margin:0.8rem 0; }
+    .theme-option { padding:0.8rem; border-radius:1.5rem; text-align:center; cursor:pointer; border:2px solid transparent; font-weight:600; color:white; }
+    .theme-option.selected { border-color:var(--accent); }
+    .modal { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); z-index:100; justify-content:center; align-items:center; }
+    .modal.active { display:flex; }
+    .modal-content { background:var(--bg-card); padding:1.5rem; border-radius:1.8rem; width:90%; max-width:400px; max-height:80vh; overflow-y:auto; }
+    .close-modal { float:right; font-size:1.5rem; cursor:pointer; color:var(--text-secondary); }
+    .day-checkboxes { display:flex; flex-wrap:wrap; gap:0.5rem; }
+    .day-checkboxes label { background:var(--btn-bg); padding:0.3rem 0.8rem; border-radius:1rem; cursor:pointer; }
+    .day-checkboxes input:checked + span { color:var(--accent); font-weight:bold; }
+    .calendar-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:0.3rem; text-align:center; }
+    .calendar-day { padding:0.4rem; border-radius:0.5rem; background:var(--bg); }
+    .calendar-day.completed { background:var(--accent); color:var(--accent-text); }
+    .emoji-picker { font-size:1.5rem; cursor:pointer; }
+    .quote { font-style:italic; color:var(--text-secondary); text-align:center; margin:0.8rem 0; }
+    .bottom-nav { display:flex; justify-content:space-around; padding:0.5rem; background:var(--bg); border-top:1px solid var(--input-border); }
+    .bottom-nav button { background:none; border:none; color:var(--text-secondary); flex:1; padding:0.5rem; }
+    .bottom-nav button.active { color:var(--accent); }
+  </style>
 </head>
-<body class="theme-growth">
-  <!-- LOADING OVERLAY (hidden after auth state resolved) -->
-  <div id="loading-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:var(--text);">
-    <div style="text-align:center;">🌿 GoaLMint<br><small style="opacity:0.7;">Loading...</small></div>
+<body class="theme-midnight">
+<div id="app">
+  <!-- LOGIN -->
+  <div id="loginScreen" class="screen active">
+    <div style="text-align:center; margin:2rem 0;">
+      <h1 style="color:var(--accent);">GoaLMint</h1>
+      <p style="color:var(--text-secondary);">mint your habits ✨</p>
+    </div>
+    <input type="email" id="loginEmail" placeholder="Email" autocomplete="email">
+    <input type="password" id="loginPassword" placeholder="Password">
+    <button class="btn btn-primary" id="loginBtn"><i class="fas fa-sign-in-alt"></i> Login</button>
+    <button class="btn btn-outline" id="showRegisterBtn">Create account</button>
+    <p id="authError" style="color:red; text-align:center;"></p>
   </div>
 
-  <!-- LOGIN SCREEN (hidden by default) -->
-  <div id="login-screen" class="screen" style="display:none;">
-    <div class="login-container card">
-      <h1 class="app-logo">🌿 GoaLMint</h1>
-      <p class="tagline">Build habits that stick.</p>
-      <div id="auth-forms">
-        <!-- Login Form -->
-        <form id="login-form" autocomplete="off">
-          <input type="email" id="login-email" placeholder="Email" required>
-          <input type="password" id="login-password" placeholder="Password" required>
-          <button type="submit">Log In</button>
-          <p class="switch-form">Don't have an account? <a href="#" id="show-signup">Sign Up</a></p>
-        </form>
-        <!-- Signup Form (hidden) -->
-        <form id="signup-form" class="hidden" autocomplete="off">
-          <input type="text" id="signup-username" placeholder="Username" required>
-          <input type="email" id="signup-email" placeholder="Email" required>
-          <input type="number" id="signup-age" placeholder="Age" min="1">
-          <input type="number" id="signup-weight" placeholder="Weight (kg)" step="0.1">
-          <input type="password" id="signup-password" placeholder="Password" required>
-          <button type="submit">Create Account</button>
-          <p class="switch-form">Already have an account? <a href="#" id="show-login">Log In</a></p>
-        </form>
-      </div>
-      <div id="auth-error" class="error-msg"></div>
-      <p style="text-align:center;margin-top:20px;font-size:0.85rem;color:var(--text-secondary);">Powered by <strong>SK Technologies</strong></p>
-    </div>
+  <!-- REGISTER -->
+  <div id="registerScreen" class="screen">
+    <h2 style="color:var(--accent);">Register</h2>
+    <input type="email" id="regEmail" placeholder="Email">
+    <input type="text" id="regUsername" placeholder="Username">
+    <input type="number" id="regAge" placeholder="Age">
+    <input type="number" id="regWeight" placeholder="Weight (kg)">
+    <input type="password" id="regPassword" placeholder="Password">
+    <button class="btn btn-primary" id="registerBtn">Sign Up</button>
+    <button class="btn btn-outline" id="backToLoginBtn">← Back to login</button>
   </div>
 
-  <!-- MAIN APP SCREEN (hidden until logged in) -->
-  <div id="app-screen" class="screen" style="display:none;">
-    <!-- Header -->
-    <header class="card">
-      <div class="header-left">
-        <h1 class="app-logo-small">🌿 GoaLMint</h1>
-      </div>
-      <div class="header-right">
-        <span id="user-level-display" class="badge">Lv.1</span>
-        <span id="xp-display" class="badge">0 XP</span>
-      </div>
-    </header>
-
-    <!-- Tab navigation -->
-    <nav class="bottom-nav card">
-      <button class="nav-btn active" data-view="dashboard-view">📊 Dashboard</button>
-      <button class="nav-btn" data-view="settings-view">⚙️ Settings</button>
-      <button class="nav-btn" data-view="profile-view">👤 Profile</button>
-    </nav>
-
-    <!-- Content area -->
-    <main id="main-content">
-      <!-- Dashboard View -->
-      <section id="dashboard-view" class="view active">
-        <div class="card greeting">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div>
-              <h2 id="greeting-text">Good morning!</h2>
-              <p id="current-date"></p>
-            </div>
-            <div class="progress-ring-container">
-              <svg class="progress-ring" width="70" height="70">
-                <circle class="progress-ring-circle-bg" stroke="var(--text-secondary)" stroke-width="6" fill="transparent" r="28" cx="35" cy="35"/>
-                <circle id="progress-ring-circle" stroke="var(--success)" stroke-width="6" fill="transparent" r="28" cx="35" cy="35" stroke-dasharray="175.93" stroke-dashoffset="175.93" stroke-linecap="round" transform="rotate(-90 35 35)"/>
-              </svg>
-              <span id="progress-percent" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-weight:bold; font-size:0.9rem;">0%</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="card streak-summary">
-          <div class="streak-card">🔥 <span id="current-streak">0</span> day streak</div>
-        </div>
-
-        <div id="motivational-quote" class="card" style="text-align:center; font-style:italic;"></div>
-
-        <div id="morning-routines" class="routine-section card">
-          <h3>🌅 Morning Routine</h3>
-          <div id="morning-habits" class="habit-list"></div>
-        </div>
-        <div id="evening-routines" class="routine-section card">
-          <h3>🌙 Evening Routine</h3>
-          <div id="evening-habits" class="habit-list"></div>
-        </div>
-        <div id="general-habits-section" class="routine-section card">
-          <h3>📌 All Habits</h3>
-          <div id="general-habits" class="habit-list"></div>
-        </div>
-
-        <button id="add-habit-btn" class="fab">+</button>
-        <button id="quick-calendar-btn" class="fab" style="bottom:140px; background:var(--primary);">📅</button>
-      </section>
-
-      <!-- Settings View -->
-      <section id="settings-view" class="view">
-        <h2 class="card">Settings</h2>
-        <div class="card setting-group">
-          <label>Theme</label>
-          <select id="theme-select">
-            <option value="growth">🌱 Growth</option>
-            <option value="modern">🚀 Modern Productivity</option>
-            <option value="darkmode">🌙 Dark Mode Focus</option>
-            <option value="golden">✨ Golden Momentum</option>
-            <option value="midnight">🌑 Midnight Focus</option>
-          </select>
-        </div>
-        <div class="card setting-group">
-          <label>Dark / Light Mode</label>
-          <button id="toggle-dark-mode">🌓 Toggle Dark Mode</button>
-        </div>
-        <div class="card setting-group">
-          <label>Custom Accent Color</label>
-          <input type="color" id="custom-accent-color" value="#2f855a">
-        </div>
-        <div class="card setting-group">
-          <label>Tracking Mode</label>
-          <select id="tracking-mode-select">
-            <option value="intense">Intense – no misses allowed</option>
-            <option value="moderate">Moderate – 1 miss/week</option>
-            <option value="normal">Normal – 2 misses/week</option>
-          </select>
-        </div>
-        <div class="card setting-group">
-          <button id="share-progress-btn">📤 Share Progress</button>
-        </div>
-        <div class="card setting-group">
-          <button id="show-achievements-btn">🏆 Achievements</button>
-        </div>
-        <div class="card setting-group">
-          <button id="show-reports-btn">📊 Reports</button>
-        </div>
-        <div class="card setting-group">
-          <button id="show-leaderboard-btn">🏅 Leaderboard</button>
-        </div>
-        <div class="card setting-group">
-          <button id="show-privacy-btn">🔒 Privacy Policy</button>
-        </div>
-        <div class="card setting-group">
-          <button id="show-faq-btn">❓ FAQ</button>
-        </div>
-        <p style="text-align:center; font-size:0.85rem; color:var(--text-secondary);">Powered by <strong>SK Technologies</strong></p>
-      </section>
-
-      <!-- Profile View -->
-      <section id="profile-view" class="view">
-        <h2 class="card">Profile</h2>
-        <div class="card profile-info">
-          <p><strong>Username:</strong> <span id="profile-username"></span></p>
-          <p><strong>Email:</strong> <span id="profile-email"></span></p>
-          <p><strong>Age:</strong> <span id="profile-age"></span></p>
-          <p><strong>Weight:</strong> <span id="profile-weight"></span> kg</p>
-        </div>
-        <button id="edit-profile-btn" class="card">✏️ Edit Profile</button>
-        <button id="logout-btn" class="card">🚪 Logout</button>
-        <button id="delete-account-btn" class="card danger">⚠️ Delete Account</button>
-        <p style="text-align:center; font-size:0.85rem; color:var(--text-secondary); margin-top:20px;">Powered by <strong>SK Technologies</strong></p>
-      </section>
-    </main>
-
-    <!-- Modals -->
-    <div id="add-habit-modal" class="modal">
-      <div class="modal-content card">
-        <span class="close-modal">&times;</span>
-        <h2>Add New Habit</h2>
-        <form id="habit-form">
-          <input type="text" id="habit-name" placeholder="Habit name" required>
-          <textarea id="habit-description" placeholder="Notes / description"></textarea>
-          <fieldset>
-            <legend>Repeat on days</legend>
-            <div class="days-checkboxes">
-              <label><input type="checkbox" value="0"> Sun</label>
-              <label><input type="checkbox" value="1" checked> Mon</label>
-              <label><input type="checkbox" value="2" checked> Tue</label>
-              <label><input type="checkbox" value="3" checked> Wed</label>
-              <label><input type="checkbox" value="4" checked> Thu</label>
-              <label><input type="checkbox" value="5" checked> Fri</label>
-              <label><input type="checkbox" value="6"> Sat</label>
-            </div>
-          </fieldset>
-          <div class="form-group">
-            <label>Reminder times (HH:MM, comma separated)</label>
-            <input type="text" id="reminder-times" placeholder="08:00, 20:00">
-          </div>
-          <div class="form-group">
-            <label>Routine</label>
-            <select id="habit-routine">
-              <option value="general">General</option>
-              <option value="morning">Morning</option>
-              <option value="evening">Evening</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Icon / Emoji</label>
-            <input type="text" id="habit-emoji" placeholder="🏃‍♂️" maxlength="2">
-          </div>
-          <button type="submit">Create Habit</button>
-        </form>
-      </div>
+  <!-- MAIN APP (Dashboard + bottom nav) -->
+  <div id="mainAppScreen" class="screen">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h2 id="userGreeting">👋</h2>
+      <button id="logoutMainBtn" class="btn" style="width:auto; padding:0.5rem 1rem;"><i class="fas fa-sign-out-alt"></i></button>
     </div>
-
-    <!-- Calendar Modal -->
-    <div id="calendar-modal" class="modal">
-      <div class="modal-content card">
-        <span class="close-modal">&times;</span>
-        <h2>Habit Calendar</h2>
-        <select id="calendar-habit-select"></select>
-        <div id="calendar-grid"></div>
-      </div>
+    <div class="quote" id="motivationalQuote"></div>
+    <div class="card" style="display:flex; justify-content:space-around;">
+      <div>🎯 <span id="totalHabits">0</span></div>
+      <div>🔥 <span id="currentStreak">0</span></div>
+      <div>⭐ Lv.<span id="userLevel">1</span> (<span id="userXP">0</span>XP)</div>
     </div>
-
-    <!-- Profile Edit Modal -->
-    <div id="edit-profile-modal" class="modal">
-      <div class="modal-content card">
-        <span class="close-modal">&times;</span>
-        <h2>Edit Profile</h2>
-        <form id="edit-profile-form">
-          <input type="text" id="edit-username" placeholder="Username">
-          <input type="number" id="edit-age" placeholder="Age">
-          <input type="number" id="edit-weight" placeholder="Weight (kg)" step="0.1">
-          <button type="submit">Save</button>
-        </form>
-      </div>
+    <div class="tabs">
+      <div class="tab active" id="tabMorning">🌅 Morning</div>
+      <div class="tab" id="tabEvening">🌙 Evening</div>
     </div>
-
-    <!-- Achievements Modal -->
-    <div id="achievements-modal" class="modal">
-      <div class="modal-content card">
-        <span class="close-modal">&times;</span>
-        <h2>Your Achievements</h2>
-        <div id="achievements-list"></div>
-      </div>
-    </div>
-
-    <!-- Reports Modal -->
-    <div id="reports-modal" class="modal">
-      <div class="modal-content card">
-        <span class="close-modal">&times;</span>
-        <h2>Reports</h2>
-        <div id="reports-content"></div>
-      </div>
-    </div>
-
-    <!-- Leaderboard Modal -->
-    <div id="leaderboard-modal" class="modal">
-      <div class="modal-content card">
-        <span class="close-modal">&times;</span>
-        <h2>Leaderboard</h2>
-        <div id="leaderboard-list"></div>
-      </div>
-    </div>
-
-    <!-- Privacy Policy Modal -->
-    <div id="privacy-modal" class="modal">
-      <div class="modal-content card">
-        <span class="close-modal">&times;</span>
-        <h2>Privacy Policy</h2>
-        <div class="legal-text">
-          <p><strong>Last Updated: June 2026</strong></p>
-          <p>SK Technologies operates this Habit Tracking App.</p>
-          <h3>Information We Collect</h3>
-          <ul>
-            <li>Habit data and progress information you choose to enter.</li>
-            <li>Account information such as email address (if account registration is available).</li>
-            <li>Device information necessary for app functionality and analytics.</li>
-          </ul>
-          <h3>How We Use Information</h3>
-          <ul>
-            <li>To provide and improve the app.</li>
-            <li>To track your habits and display progress statistics.</li>
-            <li>To send notifications and reminders that you enable.</li>
-            <li>To improve app performance and user experience.</li>
-          </ul>
-          <h3>Data Sharing</h3>
-          <p>We do not sell your personal information. We may share data with trusted service providers that help us operate the app, such as cloud storage or analytics services.</p>
-          <h3>Data Security</h3>
-          <p>We take reasonable measures to protect your information from unauthorized access, disclosure, or misuse.</p>
-          <h3>Your Rights</h3>
-          <p>You may request deletion of your account and associated data by contacting us.</p>
-          <h3>Children's Privacy</h3>
-          <p>Our app is not intended for children under 13 years of age.</p>
-          <h3>Changes to This Policy</h3>
-          <p>We may update this Privacy Policy from time to time. Changes will be posted within the app.</p>
-          <h3>Contact Us</h3>
-          <p>SK Technologies<br>Email: sakalatechnologies00@gmail.com</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- FAQ Modal -->
-    <div id="faq-modal" class="modal">
-      <div class="modal-content card">
-        <span class="close-modal">&times;</span>
-        <h2>Frequently Asked Questions</h2>
-        <div class="legal-text">
-          <h4>1. What is this app?</h4>
-          <p>This app helps you build positive habits and track your daily progress.</p>
-          <h4>2. Is the app free?</h4>
-          <p>Yes, the basic features are free to use. Additional premium features may be introduced in the future.</p>
-          <h4>3. How do I create a habit?</h4>
-          <p>Tap the "Add Habit" button, enter your habit details, and choose a schedule.</p>
-          <h4>4. How are streaks calculated?</h4>
-          <p>A streak increases each time you complete a habit on its scheduled day.</p>
-          <h4>5. Can I edit or delete a habit?</h4>
-          <p>Yes. Open the habit and select Edit or Delete.</p>
-          <h4>6. Will I receive reminders?</h4>
-          <p>Yes, if notifications are enabled on your device.</p>
-          <h4>7. Is my data secure?</h4>
-          <p>We use reasonable security measures to protect your data.</p>
-          <h4>8. Can I use the app offline?</h4>
-          <p>Yes. Most habit tracking features work without an internet connection.</p>
-          <h4>9. How do I delete my data?</h4>
-          <p>Contact SK Technologies support or use the account deletion option if available.</p>
-          <h4>10. How can I contact support?</h4>
-          <p>Email: sakalatechnologies00@gmail.com</p>
-        </div>
-      </div>
+    <div id="habitListContainer" style="flex:1; overflow-y:auto;"></div>
+    <button class="btn btn-primary" id="addHabitFAB"><i class="fas fa-plus"></i> New Habit</button>
+    <div class="bottom-nav">
+      <button id="navDashboard" class="active"><i class="fas fa-home"></i></button>
+      <button id="navCalendar"><i class="fas fa-calendar-alt"></i></button>
+      <button id="navAchievements"><i class="fas fa-trophy"></i></button>
+      <button id="navLeaderboard"><i class="fas fa-list-ol"></i></button>
+      <button id="navSettings"><i class="fas fa-cog"></i></button>
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <!-- SUB-SCREENS within main app -->
+  <div id="calendarView" class="screen">
+    <h2>📅 Habit Calendar</h2>
+    <select id="calendarHabitSelect"></select>
+    <div class="calendar-grid" id="calendarGrid"></div>
+    <button class="btn" id="backFromCalendar">← Back</button>
+  </div>
+
+  <div id="achievementsView" class="screen">
+    <h2>🏆 Achievements</h2>
+    <div id="achievementsList"></div>
+    <button class="btn" id="backFromAchievements">← Back</button>
+  </div>
+
+  <div id="leaderboardView" class="screen">
+    <h2>🏅 Leaderboard</h2>
+    <div id="leaderboardList"></div>
+    <button class="btn" id="backFromLeaderboard">← Back</button>
+  </div>
+
+  <div id="settingsView" class="screen">
+    <h2>⚙️ Settings</h2>
+    <div class="card">
+      <label>Tracking Mode</label>
+      <select id="trackingMode">
+        <option value="normal">Normal</option>
+        <option value="moderate">Moderate</option>
+        <option value="intense">Intense</option>
+      </select>
+    </div>
+    <div class="card">
+      <p><strong>Theme</strong></p>
+      <div class="theme-grid">
+        <div class="theme-option" data-theme="growth" style="background:#2e7d32;">🌱 Growth</div>
+        <div class="theme-option" data-theme="productivity" style="background:#1e3a8a;">🚀 Productivity</div>
+        <div class="theme-option" data-theme="darkfocus" style="background:#2563eb;">🌙 Dark Focus</div>
+        <div class="theme-option" data-theme="golden" style="background:#d4af37; color:black;">✨ Golden</div>
+        <div class="theme-option selected" data-theme="midnight" style="background:#111;">🌑 Midnight</div>
+      </div>
+    </div>
+    <button class="btn" id="shareProgressBtn"><i class="fas fa-share"></i> Share Progress</button>
+    <button class="btn" id="showPrivacyBtn">🔒 Privacy Policy</button>
+    <button class="btn" id="showFaqBtn">❓ FAQ</button>
+    <button class="btn btn-danger" id="deleteAccountBtn">🗑 Delete Account</button>
+    <button class="btn" id="backFromSettings">← Dashboard</button>
+  </div>
+
+  <!-- HABIT FORM MODAL -->
+  <div id="habitModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" data-modal="habitModal">&times;</span>
+      <h3 id="habitModalTitle">New Habit</h3>
+      <input type="text" id="habitName" placeholder="Habit name" required>
+      <select id="habitRepeat">
+        <option value="daily">Daily</option>
+        <option value="weekly">Weekly</option>
+        <option value="custom">Custom days</option>
+      </select>
+      <div id="customDaysContainer" style="display:none;" class="day-checkboxes">
+        <label><input type="checkbox" value="0"><span>Sun</span></label>
+        <label><input type="checkbox" value="1"><span>Mon</span></label>
+        <label><input type="checkbox" value="2"><span>Tue</span></label>
+        <label><input type="checkbox" value="3"><span>Wed</span></label>
+        <label><input type="checkbox" value="4"><span>Thu</span></label>
+        <label><input type="checkbox" value="5"><span>Fri</span></label>
+        <label><input type="checkbox" value="6"><span>Sat</span></label>
+      </div>
+      <input type="text" id="reminderTimes" placeholder="Reminder times (e.g. 08:00,20:00)">
+      <input type="text" id="habitEmoji" placeholder="Emoji (e.g. 🏃)" maxlength="2">
+      <textarea id="habitNotes" placeholder="Notes / description"></textarea>
+      <select id="habitRoutine">
+        <option value="morning">Morning Routine</option>
+        <option value="evening">Evening Routine</option>
+      </select>
+      <button class="btn btn-primary" id="saveHabitBtn">Save Habit</button>
+    </div>
+  </div>
+
+  <!-- PRIVACY MODAL -->
+  <div id="privacyModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" data-modal="privacyModal">&times;</span>
+      <h3>Privacy Policy</h3>
+      <p>We collect habit data and account info. We do not sell your data. Contact sakalatechnologies00@gmail.com.</p>
+    </div>
+  </div>
+
+  <!-- FAQ MODAL -->
+  <div id="faqModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" data-modal="faqModal">&times;</span>
+      <h3>FAQ</h3>
+      <p><strong>Is it free?</strong> Yes.</p>
+      <p><strong>How are streaks calculated?</strong> Consecutive days.</p>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+<script>
+  // Firebase
+  firebase.initializeApp({
+    apiKey: "AIzaSyCWVNHO-YCKX0xFMvVsAx2vByquADBMDrQ",
+    authDomain: "goal-mint.firebaseapp.com",
+    projectId: "goal-mint",
+    storageBucket: "goal-mint.firebasestorage.app",
+    messagingSenderId: "251716328908",
+    appId: "1:251716328908:web:f268362ed2ba17ab9f5169"
+  });
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  let currentUser = null, userDocRef = null, habits = [], currentRoutine = 'morning', editingHabitId = null;
+  const quotes = ["Small steps, big results.","Consistency is key.","Don't break the chain.","You are what you repeatedly do.","One day at a time."];
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // Elements
+    const $ = id => document.getElementById(id);
+    const loginScreen = $('loginScreen'), registerScreen = $('registerScreen'), mainAppScreen = $('mainAppScreen');
+    const calendarView = $('calendarView'), achievementsView = $('achievementsView'), leaderboardView = $('leaderboardView'), settingsView = $('settingsView');
+    const loginEmail = $('loginEmail'), loginPassword = $('loginPassword'), loginBtn = $('loginBtn'), showRegisterBtn = $('showRegisterBtn');
+    const regEmail = $('regEmail'), regUsername = $('regUsername'), regAge = $('regAge'), regWeight = $('regWeight'), regPassword = $('regPassword'), registerBtn = $('registerBtn'), backToLoginBtn = $('backToLoginBtn');
+    const userGreeting = $('userGreeting'), totalHabitsEl = $('totalHabits'), currentStreakEl = $('currentStreak'), userLevelEl = $('userLevel'), userXPEl = $('userXP');
+    const habitListContainer = $('habitListContainer'), tabMorning = $('tabMorning'), tabEvening = $('tabEvening'), addHabitFAB = $('addHabitFAB');
+    const logoutMainBtn = $('logoutMainBtn'), motivationalQuote = $('motivationalQuote');
+    const habitModal = $('habitModal'), habitName = $('habitName'), habitRepeat = $('habitRepeat'), customDaysContainer = $('customDaysContainer');
+    const reminderTimes = $('reminderTimes'), habitEmoji = $('habitEmoji'), habitNotes = $('habitNotes'), habitRoutine = $('habitRoutine'), saveHabitBtn = $('saveHabitBtn'), habitModalTitle = $('habitModalTitle');
+    const trackingMode = $('trackingMode'), deleteAccountBtn = $('deleteAccountBtn'), backFromSettings = $('backFromSettings');
+    const shareProgressBtn = $('shareProgressBtn'), showPrivacyBtn = $('showPrivacyBtn'), showFaqBtn = $('showFaqBtn');
+    const privacyModal = $('privacyModal'), faqModal = $('faqModal');
+    const calendarHabitSelect = $('calendarHabitSelect'), calendarGrid = $('calendarGrid');
+    const achievementsList = $('achievementsList'), leaderboardList = $('leaderboardList');
+    const navDashboard = $('navDashboard'), navCalendar = $('navCalendar'), navAchievements = $('navAchievements'), navLeaderboard = $('navLeaderboard'), navSettings = $('navSettings');
+    const themeOptions = document.querySelectorAll('.theme-option');
+
+    // Screen switching
+    function showScreen(screen) {
+      [loginScreen, registerScreen, mainAppScreen, calendarView, achievementsView, leaderboardView, settingsView].forEach(s => s.classList.remove('active'));
+      screen.classList.add('active');
+    }
+    function showMainView(view) {
+      [mainAppScreen, calendarView, achievementsView, leaderboardView, settingsView].forEach(v => v.classList.remove('active'));
+      view.classList.add('active');
+    }
+
+    // Auth
+    auth.onAuthStateChanged(async user => {
+      currentUser = user;
+      if (user) {
+        userDocRef = db.collection('users').doc(user.uid);
+        await loadUserData();
+        showScreen(mainAppScreen);
+        await loadHabits();
+        renderDashboard();
+        applySavedTheme();
+        requestNotificationPermission();
+      } else {
+        loginEmail.value = ''; loginPassword.value = '';
+        showScreen(loginScreen);
+      }
+    });
+
+    showRegisterBtn.addEventListener('click', () => showScreen(registerScreen));
+    backToLoginBtn.addEventListener('click', () => showScreen(loginScreen));
+    loginBtn.addEventListener('click', async () => {
+      try { await auth.signInWithEmailAndPassword(loginEmail.value.trim(), loginPassword.value); } catch(e) { alert(e.message); }
+    });
+    registerBtn.addEventListener('click', async () => {
+      try {
+        const cred = await auth.createUserWithEmailAndPassword(regEmail.value.trim(), regPassword.value);
+        await db.collection('users').doc(cred.user.uid).set({
+          email: regEmail.value.trim(), username: regUsername.value.trim() || 'User', age: regAge.value, weight: regWeight.value,
+          totalXP:0, level:1, badges:[], settings:{ theme:'midnight', trackingMode:'normal' }
+        });
+        await db.collection('leaderboard').doc(cred.user.uid).set({ username: regUsername.value.trim() || 'User', xp:0 });
+      } catch(e) { alert(e.message); }
+    });
+    logoutMainBtn.addEventListener('click', () => auth.signOut());
+
+    // User data
+    async function loadUserData() {
+      const doc = await userDocRef.get();
+      if (doc.exists) {
+        const d = doc.data();
+        userGreeting.textContent = `👋 ${d.username || 'User'}`;
+        userLevelEl.textContent = d.level||1; userXPEl.textContent = d.totalXP||0;
+        trackingMode.value = d.settings?.trackingMode || 'normal';
+        applyTheme(d.settings?.theme || 'midnight');
+      }
+    }
+
+    // Habits
+    async function loadHabits() { const snap = await userDocRef.collection('habits').get(); habits = snap.docs.map(d => ({id:d.id,...d.data()})); }
+    function getTodayStr() { return new Date().toISOString().split('T')[0]; }
+    function isToday(s) { return s === getTodayStr(); }
+    function habitScheduledToday(h) {
+      if (!h.repeatDays || h.repeatDays.length===0) return h.repeat==='daily' || h.repeat==='weekly';
+      return h.repeatDays.includes(new Date().getDay());
+    }
+
+    function renderDashboard() {
+      const morning = habits.filter(h => h.routine==='morning' && habitScheduledToday(h));
+      const evening = habits.filter(h => h.routine==='evening' && habitScheduledToday(h));
+      const display = currentRoutine==='morning'? morning : evening;
+      totalHabitsEl.textContent = habits.length;
+      let max=0; habits.forEach(h=>{if(h.streak>max) max=h.streak;});
+      currentStreakEl.textContent = max;
+      motivationalQuote.textContent = `“${quotes[Math.floor(Math.random()*quotes.length)]}”`;
+      habitListContainer.innerHTML = display.length ? display.map(h => {
+        const done = isToday(h.lastCompletedDate);
+        return `<div class="habit-item">
+          <div><span>${h.emoji||'✅'}</span> <strong>${h.name}</strong><br><small>${h.time||''} · ${h.repeat}</small></div>
+          <div style="display:flex; gap:0.5rem; align-items:center;">
+            <span class="streak-badge">${h.streak||0}</span>
+            <button class="btn complete-btn" data-id="${h.id}" ${done?'disabled':''} style="width:auto; padding:0.4rem;">${done?'✓':'Done'}</button>
+            <button class="btn edit-btn" data-id="${h.id}" style="width:auto; padding:0.4rem;"><i class="fas fa-edit"></i></button>
+          </div>
+        </div>`;
+      }).join('') : '<p style="text-align:center; color:var(--text-secondary);">No habits</p>';
+      document.querySelectorAll('.complete-btn').forEach(b => b.addEventListener('click', async e => { await completeHabit(e.currentTarget.dataset.id); }));
+      document.querySelectorAll('.edit-btn').forEach(b => b.addEventListener('click', e => openEditHabit(e.currentTarget.dataset.id)));
+    }
+
+    async function completeHabit(id) {
+      const ref = userDocRef.collection('habits').doc(id);
+      const h = habits.find(x=>x.id===id); if(!h || isToday(h.lastCompletedDate)) return;
+      const today = getTodayStr(), yesterday = new Date(Date.now()-86400000).toISOString().split('T')[0];
+      let streak = (h.streak||0); if(h.lastCompletedDate===yesterday) streak++; else streak=1;
+      await ref.update({ lastCompletedDate:today, streak });
+      const userDoc = await userDocRef.get(); const d = userDoc.data();
+      const xp = (d.totalXP||0)+10, level = Math.floor(xp/100)+1;
+      const badges = d.badges||[];
+      if(streak===7 && !badges.includes('7-day')) badges.push('7-day');
+      if(streak===30 && !badges.includes('30-day')) badges.push('30-day');
+      if(level > (d.level||1)) badges.push(`level-${level}`);
+      await userDocRef.update({ totalXP:xp, level, badges });
+      await db.collection('leaderboard').doc(currentUser.uid).set({ username:d.username, xp },{merge:true});
+      await loadHabits(); renderDashboard(); userLevelEl.textContent=level; userXPEl.textContent=xp;
+    }
+
+    function openEditHabit(id) {
+      const h = habits.find(x=>x.id===id); if(!h) return;
+      editingHabitId = id; habitModalTitle.textContent='Edit Habit';
+      habitName.value=h.name; habitRepeat.value=h.repeat||'daily';
+      reminderTimes.value=(h.reminderTimes||[]).join(','); habitEmoji.value=h.emoji||''; habitNotes.value=h.notes||''; habitRoutine.value=h.routine||'morning';
+      if(h.repeat==='custom') { customDaysContainer.style.display='flex'; document.querySelectorAll('#customDaysContainer input').forEach(cb=>cb.checked=(h.repeatDays||[]).includes(parseInt(cb.value))); }
+      else customDaysContainer.style.display='none';
+      habitModal.classList.add('active');
+    }
+
+    addHabitFAB.addEventListener('click', ()=>{
+      editingHabitId=null; habitModalTitle.textContent='New Habit';
+      habitName.value=''; habitRepeat.value='daily'; reminderTimes.value=''; habitEmoji.value=''; habitNotes.value=''; habitRoutine.value='morning';
+      customDaysContainer.style.display='none';
+      habitModal.classList.add('active');
+    });
+    habitRepeat.addEventListener('change', ()=>{ customDaysContainer.style.display = habitRepeat.value==='custom'?'flex':'none'; });
+
+    saveHabitBtn.addEventListener('click', async ()=>{
+      const name = habitName.value.trim(); if(!name) return alert('Name required');
+      const repeat = habitRepeat.value;
+      let repeatDays = [];
+      if(repeat==='custom') repeatDays = Array.from(document.querySelectorAll('#customDaysContainer input:checked')).map(cb=>parseInt(cb.value));
+      const data = {
+        name, repeat, repeatDays, time: reminderTimes.value.split(',')[0]?.trim()||'08:00',
+        reminderTimes: reminderTimes.value.split(',').map(s=>s.trim()).filter(Boolean),
+        emoji: habitEmoji.value || '✅', notes: habitNotes.value, routine: habitRoutine.value,
+        streak: editingHabitId ? (habits.find(h=>h.id===editingHabitId)?.streak||0) : 0,
+        lastCompletedDate: editingHabitId ? (habits.find(h=>h.id===editingHabitId)?.lastCompletedDate||null) : null
+      };
+      if(editingHabitId) await userDocRef.collection('habits').doc(editingHabitId).update(data);
+      else await userDocRef.collection('habits').add(data);
+      habitModal.classList.remove('active');
+      await loadHabits(); renderDashboard();
+    });
+
+    document.querySelectorAll('.close-modal').forEach(b => b.addEventListener('click', ()=>{ document.getElementById(b.dataset.modal).classList.remove('active'); }));
+    window.addEventListener('click', e => { if(e.target.classList.contains('modal')) e.target.classList.remove('active'); });
+
+    // Tabs & Navigation
+    tabMorning.addEventListener('click', ()=>{ currentRoutine='morning'; tabMorning.classList.add('active'); tabEvening.classList.remove('active'); renderDashboard(); });
+    tabEvening.addEventListener('click', ()=>{ currentRoutine='evening'; tabEvening.classList.add('active'); tabMorning.classList.remove('active'); renderDashboard(); });
+    navDashboard.addEventListener('click', ()=>{ showMainView(mainAppScreen); setActiveNav(navDashboard); });
+    navCalendar.addEventListener('click', ()=>{ showMainView(calendarView); populateCalendarHabits(); setActiveNav(navCalendar); });
+    navAchievements.addEventListener('click', ()=>{ showMainView(achievementsView); loadAchievements(); setActiveNav(navAchievements); });
+    navLeaderboard.addEventListener('click', ()=>{ showMainView(leaderboardView); loadLeaderboard(); setActiveNav(navLeaderboard); });
+    navSettings.addEventListener('click', ()=>{ showMainView(settingsView); setActiveNav(navSettings); });
+    function setActiveNav(btn) { document.querySelectorAll('.bottom-nav button').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
+    $('backFromCalendar').addEventListener('click', ()=> showMainView(mainAppScreen));
+    $('backFromAchievements').addEventListener('click', ()=> showMainView(mainAppScreen));
+    $('backFromLeaderboard').addEventListener('click', ()=> showMainView(mainAppScreen));
+    backFromSettings.addEventListener('click', ()=> showMainView(mainAppScreen));
+
+    // Calendar
+    async function populateCalendarHabits() {
+      calendarHabitSelect.innerHTML = habits.map(h => `<option value="${h.id}">${h.emoji||''} ${h.name}</option>`).join('');
+      if(habits.length) renderCalendar(habits[0].id);
+      calendarHabitSelect.onchange = ()=> renderCalendar(calendarHabitSelect.value);
+    }
+    function renderCalendar(habitId) {
+      const h = habits.find(x=>x.id===habitId); if(!h) return;
+      const now=new Date(), y=now.getFullYear(), m=now.getMonth();
+      const firstDay=new Date(y,m,1).getDay(), days=new Date(y,m+1,0).getDate();
+      let html='<div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>';
+      for(let i=0;i<firstDay;i++) html+='<div></div>';
+      for(let d=1;d<=days;d++){
+        const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const completed = (h.completedDates||[]).includes(dateStr);
+        html+=`<div class="calendar-day${completed?' completed':''}">${d}</div>`;
+      }
+      calendarGrid.innerHTML=html;
+    }
+
+    // Achievements
+    async function loadAchievements() {
+      const doc = await userDocRef.get(); const badges = doc.data()?.badges||[];
+      achievementsList.innerHTML = badges.length ? badges.map(b=>`<p>🏅 ${b.replace(/-/g,' ')}</p>`).join('') : '<p>No achievements yet.</p>';
+    }
+
+    // Leaderboard
+    async function loadLeaderboard() {
+      const snap = await db.collection('leaderboard').orderBy('xp','desc').limit(20).get();
+      let html='<ol>'; snap.forEach(d=>{ const u=d.data(); html+=`<li>${u.username} – ${u.xp} XP</li>`; }); html+='</ol>';
+      leaderboardList.innerHTML=html;
+    }
+
+    // Share
+    shareProgressBtn.addEventListener('click', async ()=>{
+      const doc = await userDocRef.get(); const d = doc.data();
+      const text = `I'm level ${d.level} on GoaLMint with ${d.totalXP} XP! 🚀`;
+      if(navigator.share) navigator.share({title:'GoaLMint',text}); else alert('Copy: '+text);
+    });
+
+    // Privacy/FAQ
+    showPrivacyBtn.addEventListener('click', ()=> privacyModal.classList.add('active'));
+    showFaqBtn.addEventListener('click', ()=> faqModal.classList.add('active'));
+
+    // Delete
+    deleteAccountBtn.addEventListener('click', async ()=>{
+      if(confirm('Delete account?')){ await userDocRef.delete(); await db.collection('leaderboard').doc(currentUser.uid).delete(); await currentUser.delete(); }
+    });
+
+    // Themes
+    function applyTheme(theme) {
+      document.body.className = `theme-${theme}`;
+      themeOptions.forEach(o => o.classList.toggle('selected', o.dataset.theme===theme));
+      localStorage.setItem('goalMintTheme', theme);
+    }
+    function applySavedTheme() { applyTheme(localStorage.getItem('goalMintTheme')||'midnight'); }
+    themeOptions.forEach(o => o.addEventListener('click', async ()=>{ applyTheme(o.dataset.theme); if(currentUser) await userDocRef.update({'settings.theme':o.dataset.theme}); }));
+    applySavedTheme();
+
+    // Notifications
+    function requestNotificationPermission() {
+      if('Notification' in window && Notification.permission==='default') Notification.requestPermission();
+    }
+    setInterval(() => {
+      if(!currentUser) return;
+      const now = new Date();
+      const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+      habits.forEach(h => {
+        const times = h.reminderTimes || [h.time];
+        if(times.includes(timeStr) && habitScheduledToday(h) && !isToday(h.lastCompletedDate) && Notification.permission==='granted') {
+          new Notification(`⏰ ${h.name}`, {body:'Time to complete your habit!'});
+        }
+      });
+    }, 60000);
+    // Missed habit check at midnight
+    function scheduleMissedCheck() {
+      const now = new Date();
+      const msToMidnight = new Date(now.getFullYear(),now.getMonth(),now.getDate()+1).getTime() - now.getTime();
+      setTimeout(() => {
+        if(!currentUser) return;
+        habits.forEach(h => {
+          if(habitScheduledToday(h) && !isToday(h.lastCompletedDate) && Notification.permission==='granted') {
+            new Notification(`⚠️ Missed: ${h.name}`, {body:'You missed this habit today.'});
+          }
+        });
+        scheduleMissedCheck();
+      }, msToMidnight + 60000);
+    }
+    scheduleMissedCheck();
+  });
+</script>
 </body>
 </html>
