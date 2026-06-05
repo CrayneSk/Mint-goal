@@ -1,6 +1,4 @@
-// script.js – GoaLMint Habit Tracker
-// Make sure this script is loaded after the HTML body, or wrap in DOMContentLoaded.
-// Firebase config – replace with your own if needed
+// script.js – GoaLMint Habit Tracker (defensive, self‑diagnosing version)
 const firebaseConfig = {
   apiKey: "AIzaSyCWVNHO-YCKX0xFMvVsAx2vByquADBMDrQ",
   authDomain: "goal-mint.firebaseapp.com",
@@ -16,74 +14,56 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 // Global state
-let currentUser = null;
-let userDocRef = null;
-let habits = [];
-let currentRoutine = 'morning'; // 'morning' or 'evening'
-let editingHabitId = null;
+let currentUser = null, userDocRef = null, habits = [], currentRoutine = 'morning', editingHabitId = null;
 
-// Wait until DOM is fully loaded
+// ---- ELEMENT REFERENCE CHECKER ----
+function getRequiredElements() {
+  const ids = [
+    'loginScreen', 'registerScreen', 'dashboardScreen', 'habitFormScreen', 'settingsScreen',
+    'loginEmail', 'loginPassword', 'loginBtn', 'showRegisterBtn',
+    'regEmail', 'regUsername', 'regAge', 'regWeight', 'regPassword', 'registerBtn', 'backToLoginBtn',
+    'userGreeting', 'totalHabits', 'currentStreak', 'habitListContainer',
+    'tabMorning', 'tabEvening', 'addHabitFAB', 'goToSettingsBtn', 'logoutBtn',
+    'habitName', 'habitRepeat', 'habitTime', 'habitNotes', 'habitRoutine',
+    'saveHabitBtn', 'cancelHabitBtn', 'formTitle',
+    'trackingMode', 'deleteAccountBtn', 'backFromSettingsBtn'
+  ];
+  const missing = [];
+  const elements = {};
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) missing.push(id);
+    elements[id] = el;
+  });
+  if (missing.length > 0) {
+    alert('❌ Missing HTML elements:\n• ' + missing.join('\n• ') + '\n\nMake sure your HTML has these exact IDs.');
+    return null;
+  }
+  return elements;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  const E = getRequiredElements();
+  if (!E) return; // stop everything if elements are missing
 
-  // ---------- DOM ELEMENTS (match the provided HTML) ----------
-  const loginScreen        = document.getElementById('loginScreen');
-  const registerScreen     = document.getElementById('registerScreen');
-  const dashboardScreen    = document.getElementById('dashboardScreen');
-  const habitFormScreen    = document.getElementById('habitFormScreen');
-  const settingsScreen     = document.getElementById('settingsScreen');
-  const loginEmail         = document.getElementById('loginEmail');
-  const loginPassword      = document.getElementById('loginPassword');
-  const loginBtn           = document.getElementById('loginBtn');
-  const showRegisterBtn    = document.getElementById('showRegisterBtn');
-  const regEmail           = document.getElementById('regEmail');
-  const regUsername        = document.getElementById('regUsername');
-  const regAge             = document.getElementById('regAge');
-  const regWeight          = document.getElementById('regWeight');
-  const regPassword        = document.getElementById('regPassword');
-  const registerBtn        = document.getElementById('registerBtn');
-  const backToLoginBtn     = document.getElementById('backToLoginBtn');
-  const userGreeting       = document.getElementById('userGreeting');
-  const totalHabitsSpan    = document.getElementById('totalHabits');
-  const currentStreakSpan  = document.getElementById('currentStreak');
-  const habitListContainer = document.getElementById('habitListContainer');
-  const tabMorning         = document.getElementById('tabMorning');
-  const tabEvening         = document.getElementById('tabEvening');
-  const addHabitFAB        = document.getElementById('addHabitFAB');
-  const goToSettingsBtn    = document.getElementById('goToSettingsBtn');
-  const logoutBtn          = document.getElementById('logoutBtn');
-  const habitName          = document.getElementById('habitName');
-  const habitRepeat        = document.getElementById('habitRepeat');
-  const habitTime          = document.getElementById('habitTime');
-  const habitNotes         = document.getElementById('habitNotes');
-  const habitRoutine       = document.getElementById('habitRoutine');
-  const saveHabitBtn       = document.getElementById('saveHabitBtn');
-  const cancelHabitBtn     = document.getElementById('cancelHabitBtn');
-  const formTitle          = document.getElementById('formTitle');
-  const trackingMode       = document.getElementById('trackingMode');
-  const deleteAccountBtn   = document.getElementById('deleteAccountBtn');
-  const backFromSettingsBtn= document.getElementById('backFromSettingsBtn');
-  const themeOptions       = document.querySelectorAll('.theme-option');
+  // Destructure for convenience
+  const {
+    loginScreen, registerScreen, dashboardScreen, habitFormScreen, settingsScreen,
+    loginEmail, loginPassword, loginBtn, showRegisterBtn,
+    regEmail, regUsername, regAge, regWeight, regPassword, registerBtn, backToLoginBtn,
+    userGreeting, totalHabits: totalHabitsEl, currentStreak: currentStreakEl, habitListContainer,
+    tabMorning, tabEvening, addHabitFAB, goToSettingsBtn, logoutBtn,
+    habitName, habitRepeat, habitTime, habitNotes, habitRoutine,
+    saveHabitBtn, cancelHabitBtn, formTitle,
+    trackingMode, deleteAccountBtn, backFromSettingsBtn
+  } = E;
+
+  const themeOptions = document.querySelectorAll('.theme-option');
 
   // ---------- SCREEN SWITCHING ----------
-  function showScreen(screen) {
-    loginScreen.classList.add('hidden');    // using hidden class to hide
-    registerScreen.classList.add('hidden');
-    dashboardScreen.classList.add('hidden');
-    habitFormScreen.classList.add('hidden');
-    settingsScreen.classList.add('hidden');
-    screen.classList.remove('hidden');
-  }
-  // Alternatively, toggle 'active' if that's how the CSS works.
-  // But the original HTML used .screen.active. We'll stick to that.
-  function showScreenById(id) {
+  function switchToScreen(screenEl) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-  }
-
-  // Override the above simple function with the correct one:
-  function switchToScreen(screenElement) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    screenElement.classList.add('active');
+    screenEl.classList.add('active');
   }
 
   // ---------- AUTH ----------
@@ -97,20 +77,21 @@ document.addEventListener('DOMContentLoaded', () => {
       renderDashboard();
       applySavedTheme();
     } else {
-      // clear fields
-      if (loginEmail) loginEmail.value = '';
-      if (loginPassword) loginPassword.value = '';
+      loginEmail.value = '';
+      loginPassword.value = '';
       switchToScreen(loginScreen);
     }
   });
 
-  // Login / Register
   showRegisterBtn.addEventListener('click', () => switchToScreen(registerScreen));
   backToLoginBtn.addEventListener('click', () => switchToScreen(loginScreen));
 
   loginBtn.addEventListener('click', async () => {
+    const email = loginEmail.value.trim();
+    const password = loginPassword.value;
+    if (!email || !password) return alert('Enter email and password.');
     try {
-      await auth.signInWithEmailAndPassword(loginEmail.value.trim(), loginPassword.value);
+      await auth.signInWithEmailAndPassword(email, password);
     } catch (err) {
       alert('Login error: ' + err.message);
     }
@@ -122,6 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const username = regUsername.value.trim();
     const age = regAge.value;
     const weight = regWeight.value;
+    if (!email || !pass) return alert('Email and password required.');
     try {
       const cred = await auth.createUserWithEmailAndPassword(email, pass);
       await db.collection('users').doc(cred.user.uid).set({
@@ -156,20 +138,15 @@ document.addEventListener('DOMContentLoaded', () => {
     habits = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   }
 
-  function getTodayStr() {
-    return new Date().toISOString().split('T')[0];
-  }
-
-  function isToday(dateStr) {
-    return dateStr === getTodayStr();
-  }
+  function getTodayStr() { return new Date().toISOString().split('T')[0]; }
+  function isToday(dateStr) { return dateStr === getTodayStr(); }
 
   function habitScheduledToday(habit) {
     const repeat = habit.repeat || 'daily';
-    const day = new Date().getDay(); // 0=Sun
+    const day = new Date().getDay();
     if (repeat === 'daily') return true;
     if (repeat === 'mon-fri') return day >= 1 && day <= 5;
-    if (repeat === 'weekly') return true; // simplified
+    if (repeat === 'weekly') return true;
     return false;
   }
 
@@ -178,10 +155,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const eveningHabits = habits.filter(h => h.routine === 'evening' && habitScheduledToday(h));
     const displayHabits = currentRoutine === 'morning' ? morningHabits : eveningHabits;
 
-    totalHabitsSpan.textContent = habits.length;
+    totalHabitsEl.textContent = habits.length;
     let maxStreak = 0;
     habits.forEach(h => { if (h.streak > maxStreak) maxStreak = h.streak; });
-    currentStreakSpan.textContent = maxStreak;
+    currentStreakEl.textContent = maxStreak;
 
     habitListContainer.innerHTML = displayHabits.length ? displayHabits.map(h => {
       const completedToday = isToday(h.lastCompletedDate);
@@ -189,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="habit-item">
           <div style="flex:1;">
             <strong>${h.name}</strong>
-            <div style="font-size:0.8rem; color:var(--text-secondary);">${h.time || 'any'} • ${h.repeat}</div>
+            <div style="font-size:0.8rem; opacity:0.7;">${h.time || 'any'} • ${h.repeat}</div>
             ${h.notes ? `<small>${h.notes}</small>` : ''}
           </div>
           <div style="display:flex; gap:0.5rem; align-items:center;">
@@ -201,19 +178,16 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         </div>
       `;
-    }).join('') : '<p style="color:var(--text-secondary); text-align:center;">No habits for this routine</p>';
+    }).join('') : '<p style="opacity:0.6; text-align:center;">No habits for this routine</p>';
 
-    // Attach events
     document.querySelectorAll('.complete-btn').forEach(btn => {
       btn.addEventListener('click', async (e) => {
-        const id = e.currentTarget.dataset.id;
-        await completeHabit(id);
+        await completeHabit(e.currentTarget.dataset.id);
       });
     });
     document.querySelectorAll('.edit-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const id = e.currentTarget.dataset.id;
-        openEditHabit(id);
+        openEditHabit(e.currentTarget.dataset.id);
       });
     });
   }
@@ -222,16 +196,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const habitRef = userDocRef.collection('habits').doc(habitId);
     const habit = habits.find(h => h.id === habitId);
     if (!habit || isToday(habit.lastCompletedDate)) return;
-
     const today = getTodayStr();
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
     let newStreak = (habit.streak || 0);
     if (habit.lastCompletedDate === yesterday) newStreak++;
     else newStreak = 1;
-
     await habitRef.update({ lastCompletedDate: today, streak: newStreak });
 
-    // Update XP and leaderboard
     const userDoc = await userDocRef.get();
     const data = userDoc.data();
     const newXP = (data.totalXP || 0) + 10;
@@ -242,7 +213,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (newLevel > (data.level || 1)) badges.push(`level-${newLevel}`);
     await userDocRef.update({ totalXP: newXP, level: newLevel, badges });
     await db.collection('leaderboard').doc(currentUser.uid).set({ username: data.username, xp: newXP }, { merge: true });
-
     await loadHabits();
     renderDashboard();
   }
@@ -295,7 +265,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   cancelHabitBtn.addEventListener('click', () => switchToScreen(dashboardScreen));
 
-  // Tabs
   tabMorning.addEventListener('click', () => {
     currentRoutine = 'morning';
     tabMorning.classList.add('active');
@@ -309,14 +278,11 @@ document.addEventListener('DOMContentLoaded', () => {
     renderDashboard();
   });
 
-  // Settings
   goToSettingsBtn.addEventListener('click', () => switchToScreen(settingsScreen));
   backFromSettingsBtn.addEventListener('click', () => switchToScreen(dashboardScreen));
 
   trackingMode.addEventListener('change', async () => {
-    if (currentUser) {
-      await userDocRef.update({ 'settings.trackingMode': trackingMode.value });
-    }
+    if (currentUser) await userDocRef.update({ 'settings.trackingMode': trackingMode.value });
   });
 
   deleteAccountBtn.addEventListener('click', async () => {
@@ -330,31 +296,21 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---------- THEMES ----------
   function applyTheme(theme) {
     document.body.className = `theme-${theme}`;
-    themeOptions.forEach(opt => {
-      opt.classList.toggle('selected', opt.dataset.theme === theme);
-    });
+    themeOptions.forEach(opt => opt.classList.toggle('selected', opt.dataset.theme === theme));
     localStorage.setItem('goalMintTheme', theme);
   }
-
   function applySavedTheme() {
-    const saved = localStorage.getItem('goalMintTheme') || 'midnight';
-    applyTheme(saved);
+    applyTheme(localStorage.getItem('goalMintTheme') || 'midnight');
   }
-
   themeOptions.forEach(opt => {
     opt.addEventListener('click', async () => {
-      const theme = opt.dataset.theme;
-      applyTheme(theme);
-      if (currentUser) {
-        await userDocRef.update({ 'settings.theme': theme });
-      }
+      applyTheme(opt.dataset.theme);
+      if (currentUser) await userDocRef.update({ 'settings.theme': opt.dataset.theme });
     });
   });
-
-  // Initial theme load (before user logs in)
   applySavedTheme();
 
-  // ---------- NOTIFICATIONS (optional) ----------
+  // ---------- NOTIFICATIONS ----------
   if ('Notification' in window && Notification.permission === 'default') {
     Notification.requestPermission();
   }
@@ -371,4 +327,4 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }, 60000);
 
-}); // end DOMContentLoaded
+}); // END DOMContentLoaded
