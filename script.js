@@ -82,6 +82,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const chapterFilter = $('chapterFilter'), habitInsight = $('habitInsight');
   const myReferralCode = $('myReferralCode'), copyReferralBtn = $('copyReferralBtn');
 
+  // Daily goal bar
+  const dailyGoalFill = $('dailyGoalFill'), dailyGoalPercent = $('dailyGoalPercent');
+
   // MODALS
   const habitModal = $('habitModal'), habitName = $('habitName'), habitCategory = $('habitCategory'), habitRepeat = $('habitRepeat');
   const customDaysContainer = $('customDaysContainer'), reminderTimes = $('reminderTimes'), habitEmoji = $('habitEmoji');
@@ -105,10 +108,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const chaptersList = $('chaptersList'), impactStats = $('impactStats'), achievementsList = $('achievementsList'), leaderboardList = $('leaderboardList');
   const parkCount = $('parkCount'), libraryCount = $('libraryCount'), officeCount = $('officeCount'), galleryCount = $('galleryCount');
 
-  // BOTTOM NAV
-  const navDashboard = $('navDashboard'), navDNA = $('navDNA'), navCity = $('navCity'), navMessages = $('navMessages');
-  const navBoss = $('navBoss'), navChapters = $('navChapters'), navImpact = $('navImpact');
-  const navAchievements = $('navAchievements'), navLeaderboard = $('navLeaderboard'), navSettings = $('navSettings');
+  // NEW BOTTOM NAV (5 tabs + more menu)
+  const navDashboard = $('navDashboard'), navCity = $('navCity'), navChallenges = $('navChallenges');
+  const navProgress = $('navProgress'), navMore = $('navMore');
+  const moreMenu = $('moreMenu');
+  const moreDNA = $('moreDNA'), moreMessages = $('moreMessages'), moreBoss = $('moreBoss');
+  const moreChapters = $('moreChapters'), moreImpact = $('moreImpact');
+  const moreAchievements = $('moreAchievements'), moreLeaderboard = $('moreLeaderboard'), moreSettings = $('moreSettings');
 
   // 3D City
   let threeCity = null;
@@ -580,6 +586,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.edit-btn').forEach(b => b.addEventListener('click', e => openEditHabit(e.currentTarget.dataset.id)));
 
     populateChapterFilter();
+
+    // Update daily goal bar
+    const totalToday = todayFiltered.length;
+    const completedToday = todayFiltered.filter(h => isToday(h.lastCompletedDate)).length;
+    const percent = totalToday ? Math.round((completedToday / totalToday) * 100) : 0;
+    if (dailyGoalFill) dailyGoalFill.style.width = percent + '%';
+    if (dailyGoalPercent) dailyGoalPercent.textContent = percent + '% (' + completedToday + '/' + totalToday + ')';
   }
 
   async function saveStreakForYesterday(habitId) {
@@ -905,22 +918,40 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // NAVIGATION
+  // ========== NEW 5-TAB NAVIGATION ==========
   function setActiveNav(btn) {
-    [navDashboard, navDNA, navCity, navMessages, navBoss, navChapters, navImpact, navAchievements, navLeaderboard, navSettings].forEach(b => b?.classList.remove('active'));
+    [navDashboard, navCity, navChallenges, navProgress, navMore].forEach(b => b?.classList.remove('active'));
     if (btn) btn.classList.add('active');
   }
 
+  // Main tab navigation
   if (navDashboard) navDashboard.addEventListener('click', () => { showScreen(mainAppScreen); setActiveNav(navDashboard); });
-  if (navDNA) navDNA.addEventListener('click', () => { showScreen(dnaScreen); renderDNA(); setActiveNav(navDNA); });
   if (navCity) navCity.addEventListener('click', () => { showScreen(cityScreen); renderCity(); setActiveNav(navCity); });
-  if (navMessages) navMessages.addEventListener('click', () => { showScreen(messagesScreen); renderMessages(); setActiveNav(navMessages); });
-  if (navBoss) navBoss.addEventListener('click', () => { showScreen(bossScreen); renderBosses(); setActiveNav(navBoss); });
-  if (navChapters) navChapters.addEventListener('click', () => { showScreen(chaptersScreen); renderChapters(); setActiveNav(navChapters); });
-  if (navImpact) navImpact.addEventListener('click', () => { showScreen(impactScreen); updateImpact(); setActiveNav(navImpact); });
-  if (navAchievements) navAchievements.addEventListener('click', () => { showScreen(achievementsScreen); loadAchievements(); setActiveNav(navAchievements); });
-  if (navLeaderboard) navLeaderboard.addEventListener('click', () => { showScreen(leaderboardScreen); loadLeaderboard(); setActiveNav(navLeaderboard); });
-  if (navSettings) navSettings.addEventListener('click', () => { showScreen(settingsView); setActiveNav(navSettings); });
+  if (navChallenges) navChallenges.addEventListener('click', () => { showScreen(bossScreen); renderBosses(); setActiveNav(navChallenges); });
+  if (navProgress) navProgress.addEventListener('click', () => { showScreen(achievementsScreen); loadAchievements(); setActiveNav(navProgress); });
+  if (navMore) navMore.addEventListener('click', () => {
+    if (moreMenu) {
+      moreMenu.style.display = moreMenu.style.display === 'flex' ? 'none' : 'flex';
+    }
+    setActiveNav(navMore);
+  });
+
+  // More menu items
+  if (moreDNA) moreDNA.addEventListener('click', () => { showScreen(dnaScreen); renderDNA(); moreMenu.style.display = 'none'; });
+  if (moreMessages) moreMessages.addEventListener('click', () => { showScreen(messagesScreen); renderMessages(); moreMenu.style.display = 'none'; });
+  if (moreBoss) moreBoss.addEventListener('click', () => { showScreen(bossScreen); renderBosses(); moreMenu.style.display = 'none'; });
+  if (moreChapters) moreChapters.addEventListener('click', () => { showScreen(chaptersScreen); renderChapters(); moreMenu.style.display = 'none'; });
+  if (moreImpact) moreImpact.addEventListener('click', () => { showScreen(impactScreen); updateImpact(); moreMenu.style.display = 'none'; });
+  if (moreAchievements) moreAchievements.addEventListener('click', () => { showScreen(achievementsScreen); loadAchievements(); moreMenu.style.display = 'none'; });
+  if (moreLeaderboard) moreLeaderboard.addEventListener('click', () => { showScreen(leaderboardScreen); loadLeaderboard(); moreMenu.style.display = 'none'; });
+  if (moreSettings) moreSettings.addEventListener('click', () => { showScreen(settingsView); moreMenu.style.display = 'none'; });
+
+  // Close more menu when clicking outside
+  window.addEventListener('click', e => {
+    if (moreMenu && !moreMenu.contains(e.target) && e.target !== navMore) {
+      moreMenu.style.display = 'none';
+    }
+  });
 
   // Back buttons
   $('backFromDNA')?.addEventListener('click', () => showScreen(mainAppScreen));
