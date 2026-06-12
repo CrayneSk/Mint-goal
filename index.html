@@ -5,78 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
   <title>GoaLMint • Habit Tracker</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <style>
-    :root {
-      --bg: #000;
-      --bg-card: #181818;
-      --text: #fff;
-      --text-secondary: #aaa;
-      --accent: #d4af37;
-      --accent-text: #000;
-      --input-bg: #1a1a1a;
-      --input-border: #333;
-      --btn-bg: #222;
-    }
-    body {
-      margin:0; font-family:system-ui, sans-serif; background:var(--bg); color:var(--text);
-      display:flex; justify-content:center; align-items:center; min-height:100vh;
-      transition: background 0.3s, color 0.3s;
-    }
-    body.theme-growth { --bg:#f0f7f0; --bg-card:#fff; --text:#1a1a1a; --text-secondary:#555; --accent:#2e7d32; --accent-text:#fff; --input-bg:#fff; --input-border:#c8e6c9; --btn-bg:#e8f5e9; }
-    body.theme-productivity { --bg:#f8fafc; --bg-card:#fff; --text:#0f172a; --text-secondary:#475569; --accent:#1e3a8a; --accent-text:#fff; --input-bg:#fff; --input-border:#cbd5e1; --btn-bg:#e2e8f0; }
-    body.theme-darkfocus { --bg:#0f0f2e; --bg-card:#1e1e3f; --text:#e0e0ff; --text-secondary:#aaaacc; --accent:#2563eb; --accent-text:#fff; --input-bg:#252550; --input-border:#404080; --btn-bg:#2a2a4a; }
-    body.theme-golden { --bg:#111; --bg-card:#222; --text:#fff; --text-secondary:#ccc; --accent:#d4af37; --accent-text:#000; --input-bg:#2a2a2a; --input-border:#444; --btn-bg:#333; }
-    body.theme-midnight { --bg:#000; --bg-card:#181818; --text:#fff; --text-secondary:#aaa; --accent:#2e7d32; --accent-text:#fff; --input-bg:#1a1a1a; --input-border:#333; --btn-bg:#1a1a1a; }
-
-    #app {
-      width:100%; max-width:500px; background:var(--bg-card); border-radius:2rem; box-shadow:0 20px 40px rgba(0,0,0,0.5);
-      height:95vh; max-height:850px; display:flex; flex-direction:column; overflow:hidden;
-    }
-    .screen { display:none; flex-direction:column; height:100%; padding:1.5rem; overflow-y:auto; }
-    .screen.active { display:flex; }
-    .btn {
-      background:var(--btn-bg); border:none; padding:0.8rem 1.5rem; border-radius:2rem; font-weight:600;
-      color:var(--text); cursor:pointer; transition:0.2s; display:inline-flex; align-items:center;
-      justify-content:center; gap:0.5rem; width:100%; margin:0.3rem 0;
-    }
-    .btn-primary { background:var(--accent); color:var(--accent-text); }
-    .btn-outline { background:transparent; border:1px solid var(--input-border); }
-    .btn-danger { background:#b91c1c; color:white; }
-    input, select, textarea {
-      background:var(--input-bg); border:1px solid var(--input-border); border-radius:1.5rem;
-      padding:0.9rem 1.2rem; color:var(--text); width:100%; margin:0.4rem 0; outline:none; font-size:1rem;
-    }
-    input:focus, select:focus { border-color:var(--accent); }
-    .card { background:var(--bg-card); border-radius:1.5rem; padding:1.2rem; margin:0.5rem 0; }
-    .habit-item { display:flex; justify-content:space-between; align-items:center; background:var(--bg); border-radius:1.5rem; padding:0.9rem 1.2rem; margin:0.5rem 0; }
-    .streak-badge { background:var(--accent); color:var(--accent-text); border-radius:50%; min-width:32px; height:32px; display:flex; align-items:center; justify-content:center; font-weight:bold; }
-    .tabs { display:flex; gap:0.5rem; margin:1rem 0; }
-    .tab { flex:1; text-align:center; padding:0.7rem; border-radius:2rem; background:var(--btn-bg); cursor:pointer; color:var(--text-secondary); }
-    .tab.active { background:var(--accent); color:var(--accent-text); }
-    .theme-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; margin:0.8rem 0; }
-    .theme-option { padding:0.8rem; border-radius:1.5rem; text-align:center; cursor:pointer; border:2px solid transparent; font-weight:600; color:white; }
-    .theme-option.selected { border-color:var(--accent); }
-    .modal { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); z-index:100; justify-content:center; align-items:center; }
-    .modal.active { display:flex; }
-    .modal-content { background:var(--bg-card); padding:1.5rem; border-radius:1.8rem; width:90%; max-width:400px; max-height:80vh; overflow-y:auto; }
-    .close-modal { float:right; font-size:1.5rem; cursor:pointer; color:var(--text-secondary); }
-    .day-checkboxes { display:flex; flex-wrap:wrap; gap:0.5rem; }
-    .day-checkboxes label { background:var(--btn-bg); padding:0.3rem 0.8rem; border-radius:1rem; cursor:pointer; }
-    .day-checkboxes input:checked + span { color:var(--accent); font-weight:bold; }
-    .calendar-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:0.3rem; text-align:center; }
-    .calendar-day { padding:0.4rem; border-radius:0.5rem; background:var(--bg); }
-    .calendar-day.completed { background:var(--accent); color:var(--accent-text); }
-    .emoji-picker { font-size:1.5rem; cursor:pointer; }
-    .quote { font-style:italic; color:var(--text-secondary); text-align:center; margin:0.8rem 0; }
-    .bottom-nav { display:flex; justify-content:space-around; padding:0.5rem; background:var(--bg); border-top:1px solid var(--input-border); }
-    .bottom-nav button { background:none; border:none; color:var(--text-secondary); flex:1; padding:0.5rem; }
-    .bottom-nav button.active { color:var(--accent); }
-  </style>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body class="theme-midnight">
 <div id="app">
   <!-- LOGIN -->
-  <div id="loginScreen" class="screen active">
+  <div id="loginScreen" class="screen">
     <div style="text-align:center; margin:2rem 0;">
       <h1 style="color:var(--accent);">GoaLMint</h1>
       <p style="color:var(--text-secondary);">mint your habits ✨</p>
@@ -93,6 +27,7 @@
     <h2 style="color:var(--accent);">Register</h2>
     <input type="email" id="regEmail" placeholder="Email">
     <input type="text" id="regUsername" placeholder="Username">
+    <input type="text" id="referralCodeInput" placeholder="Referral Code (optional)">
     <input type="number" id="regAge" placeholder="Age">
     <input type="number" id="regWeight" placeholder="Weight (kg)">
     <input type="password" id="regPassword" placeholder="Password">
@@ -100,53 +35,117 @@
     <button class="btn btn-outline" id="backToLoginBtn">← Back to login</button>
   </div>
 
-  <!-- MAIN APP (Dashboard + bottom nav) -->
+  <!-- MAIN APP DASHBOARD – clean, no referral card -->
   <div id="mainAppScreen" class="screen">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
       <h2 id="userGreeting">👋</h2>
       <button id="logoutMainBtn" class="btn" style="width:auto; padding:0.5rem 1rem;"><i class="fas fa-sign-out-alt"></i></button>
     </div>
-    <div class="quote" id="motivationalQuote"></div>
-    <div class="card" style="display:flex; justify-content:space-around;">
+    <div class="card" id="mentorMessage" style="font-size:0.9rem; margin-bottom:0.5rem; flex-shrink:0;"></div>
+    <div class="card" style="display:flex; justify-content:space-around; flex-wrap:wrap; gap:0.5rem; flex-shrink:0;">
       <div>🎯 <span id="totalHabits">0</span></div>
       <div>🔥 <span id="currentStreak">0</span></div>
-      <div>⭐ Lv.<span id="userLevel">1</span> (<span id="userXP">0</span>XP)</div>
+      <div>⭐ <span id="userIdentity">Beginner</span></div>
+      <div>💎 <span id="userXP">0</span> XP</div>
+      <div>🪙 <span id="mintCoins">0</span></div>
+      <div>🔒 <span id="mintTokens">0</span></div>
     </div>
-    <div class="tabs">
+    <div class="tabs" style="flex-shrink:0;">
       <div class="tab active" id="tabMorning">🌅 Morning</div>
       <div class="tab" id="tabEvening">🌙 Evening</div>
     </div>
-    <div id="habitListContainer" style="flex:1; overflow-y:auto;"></div>
-    <button class="btn btn-primary" id="addHabitFAB"><i class="fas fa-plus"></i> New Habit</button>
-    <div class="bottom-nav">
-      <button id="navDashboard" class="active"><i class="fas fa-home"></i></button>
-      <button id="navCalendar"><i class="fas fa-calendar-alt"></i></button>
-      <button id="navAchievements"><i class="fas fa-trophy"></i></button>
-      <button id="navLeaderboard"><i class="fas fa-list-ol"></i></button>
-      <button id="navSettings"><i class="fas fa-cog"></i></button>
+    <select id="chapterFilter" style="margin-bottom:0.5rem; flex-shrink:0;">
+      <option value="">All Chapters</option>
+    </select>
+    <div id="habitListContainer" style="flex:1; overflow-y:auto; min-height:0;"></div>
+    <div id="habitInsight" class="card" style="font-size:0.85rem; display:none; flex-shrink:0;"></div>
+    <button class="btn btn-primary" id="addHabitFAB" style="flex-shrink:0; margin-bottom:0.5rem;"><i class="fas fa-plus"></i> New Habit</button>
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav" style="flex-shrink:0; overflow-x:auto; white-space:nowrap; display:flex; justify-content:space-around; padding:0.5rem 0.2rem; background:var(--bg); border-top:2px solid var(--accent); min-height:4rem; align-items:center;">
+      <button id="navDashboard" class="active" style="flex-direction:column; gap:0.2rem; font-size:0.9rem;"><i class="fas fa-home"></i><span style="font-size:0.65rem;">Home</span></button>
+      <button id="navDNA" style="flex-direction:column; gap:0.2rem; font-size:0.9rem;"><i class="fas fa-dna"></i><span style="font-size:0.65rem;">DNA</span></button>
+      <button id="navCity" style="flex-direction:column; gap:0.2rem; font-size:0.9rem;"><i class="fas fa-city"></i><span style="font-size:0.65rem;">City</span></button>
+      <button id="navMessages" style="flex-direction:column; gap:0.2rem; font-size:0.9rem;"><i class="fas fa-envelope"></i><span style="font-size:0.65rem;">Messages</span></button>
+      <button id="navBoss" style="flex-direction:column; gap:0.2rem; font-size:0.9rem;"><i class="fas fa-skull"></i><span style="font-size:0.65rem;">Boss</span></button>
+      <button id="navChapters" style="flex-direction:column; gap:0.2rem; font-size:0.9rem;"><i class="fas fa-book"></i><span style="font-size:0.65rem;">Chapters</span></button>
+      <button id="navImpact" style="flex-direction:column; gap:0.2rem; font-size:0.9rem;"><i class="fas fa-globe-americas"></i><span style="font-size:0.65rem;">Impact</span></button>
+      <button id="navAchievements" style="flex-direction:column; gap:0.2rem; font-size:0.9rem;"><i class="fas fa-trophy"></i><span style="font-size:0.65rem;">Trophies</span></button>
+      <button id="navLeaderboard" style="flex-direction:column; gap:0.2rem; font-size:0.9rem;"><i class="fas fa-list-ol"></i><span style="font-size:0.65rem;">Rank</span></button>
+      <button id="navSettings" style="flex-direction:column; gap:0.2rem; font-size:0.9rem;"><i class="fas fa-cog"></i><span style="font-size:0.65rem;">Settings</span></button>
     </div>
   </div>
 
-  <!-- SUB-SCREENS within main app -->
-  <div id="calendarView" class="screen">
-    <h2>📅 Habit Calendar</h2>
-    <select id="calendarHabitSelect"></select>
-    <div class="calendar-grid" id="calendarGrid"></div>
-    <button class="btn" id="backFromCalendar">← Back</button>
+  <!-- HABIT DNA -->
+  <div id="dnaScreen" class="screen">
+    <h2>🧬 Habit DNA</h2>
+    <div id="dnaBars"></div>
+    <button class="btn" id="backFromDNA">← Back</button>
   </div>
 
-  <div id="achievementsView" class="screen">
+  <!-- CITY BUILDER (canvas) -->
+  <<!-- CITY BUILDER (3D) -->
+<div id="cityScreen" class="screen">
+  <h2>🏙️ My 3D City</h2>
+  <div class="card" style="display:flex; justify-content:space-around; text-align:center;">
+    <div><div style="font-size:1.5rem;">🌳</div><div><span id="parkCount">0</span> Parks</div></div>
+    <div><div style="font-size:1.5rem;">📚</div><div><span id="libraryCount">0</span> Libraries</div></div>
+    <div><div style="font-size:1.5rem;">🏢</div><div><span id="officeCount">0</span> Offices</div></div>
+    <div><div style="font-size:1.5rem;">🎨</div><div><span id="galleryCount">0</span> Galleries</div></div>
+  </div>
+  <!-- 3D container -->
+  <div id="three-container" style="width:100%; height:400px; border-radius:1rem; overflow:hidden; margin:1rem 0; background:#87CEEB;"></div>
+  <p style="text-align:center; color: var(--text-secondary); font-style: italic;">
+    Drag to rotate • Pinch to zoom • Complete habits to grow! 🌆
+  </p>
+  <button class="btn" id="backFromCity">← Back</button>
+</div>
+
+  <!-- FUTURE SELF MESSAGES -->
+  <div id="messagesScreen" class="screen">
+    <h2>✉️ Future Self</h2>
+    <button class="btn btn-primary" id="newMessageBtn">Write a Message</button>
+    <div id="messagesList" style="margin-top:1rem;"></div>
+    <button class="btn" id="backFromMessages">← Back</button>
+  </div>
+
+  <!-- BOSS BATTLES -->
+  <div id="bossScreen" class="screen">
+    <h2>⚔️ Boss Battles</h2>
+    <button class="btn btn-primary" id="startBossBtn">Start New Challenge</button>
+    <div id="activeBosses"></div>
+    <button class="btn" id="backFromBoss">← Back</button>
+  </div>
+
+  <!-- LIFE CHAPTERS -->
+  <div id="chaptersScreen" class="screen">
+    <h2>📖 Life Chapters</h2>
+    <button class="btn btn-primary" id="newChapterBtn">Create Chapter</button>
+    <div id="chaptersList"></div>
+    <button class="btn" id="backFromChapters">← Back</button>
+  </div>
+
+  <!-- WORLD IMPACT -->
+  <div id="impactScreen" class="screen">
+    <h2>🌍 World Impact</h2>
+    <div id="impactStats"></div>
+    <button class="btn" id="backFromImpact">← Back</button>
+  </div>
+
+  <!-- ACHIEVEMENTS -->
+  <div id="achievementsScreen" class="screen">
     <h2>🏆 Achievements</h2>
     <div id="achievementsList"></div>
     <button class="btn" id="backFromAchievements">← Back</button>
   </div>
 
-  <div id="leaderboardView" class="screen">
+  <!-- LEADERBOARD -->
+  <div id="leaderboardScreen" class="screen">
     <h2>🏅 Leaderboard</h2>
     <div id="leaderboardList"></div>
     <button class="btn" id="backFromLeaderboard">← Back</button>
   </div>
 
+  <!-- SETTINGS – now includes referral code -->
   <div id="settingsView" class="screen">
     <h2>⚙️ Settings</h2>
     <div class="card">
@@ -158,20 +157,60 @@
       </select>
     </div>
     <div class="card">
-      <p><strong>Theme</strong></p>
-      <div class="theme-grid">
-        <div class="theme-option" data-theme="growth" style="background:#2e7d32;">🌱 Growth</div>
-        <div class="theme-option" data-theme="productivity" style="background:#1e3a8a;">🚀 Productivity</div>
-        <div class="theme-option" data-theme="darkfocus" style="background:#2563eb;">🌙 Dark Focus</div>
-        <div class="theme-option" data-theme="golden" style="background:#d4af37; color:black;">✨ Golden</div>
-        <div class="theme-option selected" data-theme="midnight" style="background:#111;">🌑 Midnight</div>
-      </div>
+      <label>World Cause</label>
+      <select id="causeSelect">
+        <option value="education">Education</option>
+        <option value="environment">Environment</option>
+        <option value="health">Health</option>
+      </select>
     </div>
+    <div class="card">
+      <p><strong>Current Theme:</strong> <span id="currentThemeName">Midnight</span></p>
+      <button class="btn" id="openShopFromSettings">🛒 Buy Themes in Mint Shop</button>
+    </div>
+    <!-- Referral section moved here -->
+    <div class="referral-card">
+      <p><strong>🔗 Your Referral Code</strong></p>
+      <span class="referral-code" id="myReferralCode">Loading...</span>
+      <button class="btn btn-small" id="copyReferralBtn">📋 Copy Code</button>
+      <p style="font-size:0.8rem; color:var(--text-secondary); margin-top:0.5rem;">
+        Invite friends! You both earn 20 🪙 when they join with your code.
+      </p>
+    </div>
+    <button class="btn" id="howItWorksBtn">📖 How It Works</button>
+    <button class="btn" id="openShopBtn">🛒 Mint Shop (All Items)</button>
     <button class="btn" id="shareProgressBtn"><i class="fas fa-share"></i> Share Progress</button>
     <button class="btn" id="showPrivacyBtn">🔒 Privacy Policy</button>
     <button class="btn" id="showFaqBtn">❓ FAQ</button>
+    <button class="btn" id="progressReplayBtn">🎬 Monthly Replay</button>
     <button class="btn btn-danger" id="deleteAccountBtn">🗑 Delete Account</button>
     <button class="btn" id="backFromSettings">← Dashboard</button>
+  </div>
+
+  <!-- HOW IT WORKS MODAL -->
+  <div id="howItWorksModal" class="modal">
+    <div class="modal-content" style="max-width:500px; max-height:80vh;">
+      <span class="close-modal" data-modal="howItWorksModal">&times;</span>
+      <h3>📖 How GoaLMint Works</h3>
+      <div style="font-size:0.9rem; line-height:1.6;">
+        <p><strong>🏠 Dashboard:</strong> View today's habits, streaks, XP, coins, and tokens. Switch between Morning/Evening routines.</p>
+        <p><strong>➕ Adding Habits:</strong> Tap "New Habit" - choose name, category (Health/Learning/Productivity/Creativity), repeat schedule, reminder times, and routine type.</p>
+        <p><strong>✅ Completing Habits:</strong> Tap "Done" on any habit. You earn +1 Mint Coin, +10 XP, and your streak increases. <em>After the day passes, only Streak Tokens can save missed days.</em></p>
+        <p><strong>🏙️ Virtual City:</strong> Each completed habit builds a real building in your city! Health→Parks, Learning→Libraries, Productivity→Offices, Creativity→Galleries. Watch your city grow with animated clouds, trees, and buildings.</p>
+        <p><strong>🛒 Mint Shop:</strong> Spend Mint Coins on 30 premium themes and XP packs. Earn coins by completing habits.</p>
+        <p><strong>🛡️ Streak Insurance:</strong> Earn Streak Tokens every 7-day streak. Use 1 token to save a missed day.</p>
+        <p><strong>⚔️ Boss Battles:</strong> Start a challenge. Each daily completion damages the boss. Missed days heal it. Defeat bosses for rewards!</p>
+        <p><strong>🧬 Habit DNA:</strong> See your habit breakdown by category - discover your identity percentages.</p>
+        <p><strong>✉️ Future Messages:</strong> Write messages that unlock after conditions (30 days, 100-day streak, etc.).</p>
+        <p><strong>📖 Life Chapters:</strong> Organize habits into life phases (Exam Season, Fitness Journey, etc.).</p>
+        <p><strong>🌍 World Impact:</strong> Choose a cause - see how your habits create positive change.</p>
+        <p><strong>🏆 Achievements & Leaderboard:</strong> Earn badges for milestones. Top 2 leaderboard players every 30 days win 500 and 200 Mint Coins!</p>
+        <p><strong>🔗 Referral System:</strong> Share your unique code. When friends join with it, you both earn 20 Mint Coins!</p>
+        <p><strong>🔔 Notifications:</strong> Set reminder times for habits. App sends notifications even in background.</p>
+        <p><strong>🎨 Themes:</strong> Choose from 5 free themes or buy 30 premium ones in the Mint Shop.</p>
+        <p><strong>🪙 Economy:</strong> Complete habits → Earn Coins & XP → Level Up → Unlock Identity Levels (Beginner→Legend).</p>
+      </div>
+    </div>
   </div>
 
   <!-- HABIT FORM MODAL -->
@@ -180,6 +219,12 @@
       <span class="close-modal" data-modal="habitModal">&times;</span>
       <h3 id="habitModalTitle">New Habit</h3>
       <input type="text" id="habitName" placeholder="Habit name" required>
+      <select id="habitCategory">
+        <option value="health">Health</option>
+        <option value="learning">Learning</option>
+        <option value="productivity">Productivity</option>
+        <option value="creativity">Creativity</option>
+      </select>
       <select id="habitRepeat">
         <option value="daily">Daily</option>
         <option value="weekly">Weekly</option>
@@ -201,7 +246,72 @@
         <option value="morning">Morning Routine</option>
         <option value="evening">Evening Routine</option>
       </select>
+      <select id="habitChapter"><option value="">No Chapter</option></select>
       <button class="btn btn-primary" id="saveHabitBtn">Save Habit</button>
+    </div>
+  </div>
+
+  <!-- MESSAGE COMPOSE MODAL -->
+  <div id="messageModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" data-modal="messageModal">&times;</span>
+      <h3>New Future Message</h3>
+      <textarea id="messageContent" placeholder="Dear future me..."></textarea>
+      <select id="unlockCondition">
+        <option value="30days">After 30 days</option>
+        <option value="streak100">After 100-day streak</option>
+        <option value="level5">After reaching Level 5</option>
+      </select>
+      <button class="btn btn-primary" id="saveMessageBtn">Save Message</button>
+    </div>
+  </div>
+
+  <!-- BOSS SETUP MODAL -->
+  <div id="bossModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" data-modal="bossModal">&times;</span>
+      <h3>New Boss Challenge</h3>
+      <input type="text" id="bossName" placeholder="Boss name (e.g. No Social Media)">
+      <input type="number" id="bossDays" placeholder="Days to defeat" min="1">
+      <button class="btn btn-primary" id="startBossChallengeBtn">Start Challenge</button>
+    </div>
+  </div>
+
+  <!-- CHAPTER MODAL -->
+  <div id="chapterModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" data-modal="chapterModal">&times;</span>
+      <h3>New Chapter</h3>
+      <input type="text" id="chapterName" placeholder="Chapter name">
+      <button class="btn btn-primary" id="saveChapterBtn">Create</button>
+    </div>
+  </div>
+
+  <!-- SHOP MODAL -->
+  <div id="shopModal" class="modal">
+    <div class="modal-content" style="max-width:450px; max-height:80vh;">
+      <span class="close-modal" data-modal="shopModal">&times;</span>
+      <h3>🛒 Mint Shop</h3>
+      <div class="card" style="text-align:center;">
+        <p>Your Balance: 🪙 <strong id="shopCoinBalance">0</strong> | 💎 <strong id="shopXPDisplay">0</strong> XP</p>
+      </div>
+      <div class="shop-section">
+        <h4>💎 Buy XP Packs</h4>
+        <div id="xpPacks"></div>
+      </div>
+      <div class="shop-section">
+        <h4>🎨 Premium Themes (30 available)</h4>
+        <div id="shopItems"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROGRESS REPLAY MODAL -->
+  <div id="replayModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" data-modal="replayModal">&times;</span>
+      <h3>🎬 Monthly Replay</h3>
+      <div id="replayStats"></div>
     </div>
   </div>
 
@@ -219,299 +329,21 @@
     <div class="modal-content">
       <span class="close-modal" data-modal="faqModal">&times;</span>
       <h3>FAQ</h3>
-      <p><strong>Is it free?</strong> Yes.</p>
+      <p><strong>Is it free?</strong> Yes, core features are free.</p>
       <p><strong>How are streaks calculated?</strong> Consecutive days.</p>
+      <p><strong>How do I earn coins?</strong> Complete habits, defeat bosses, invite friends.</p>
+      <p><strong>Can I recover a missed day?</strong> Yes! Use Streak Tokens (earned every 7-day streak).</p>
     </div>
   </div>
 </div>
+<!-- Add these BEFORE your script.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
+<!-- Then your existing Firebase scripts and script.js -->
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
-<script>
-  // Firebase
-  firebase.initializeApp({
-    apiKey: "AIzaSyCWVNHO-YCKX0xFMvVsAx2vByquADBMDrQ",
-    authDomain: "goal-mint.firebaseapp.com",
-    projectId: "goal-mint",
-    storageBucket: "goal-mint.firebasestorage.app",
-    messagingSenderId: "251716328908",
-    appId: "1:251716328908:web:f268362ed2ba17ab9f5169"
-  });
-  const auth = firebase.auth();
-  const db = firebase.firestore();
-
-  let currentUser = null, userDocRef = null, habits = [], currentRoutine = 'morning', editingHabitId = null;
-  const quotes = ["Small steps, big results.","Consistency is key.","Don't break the chain.","You are what you repeatedly do.","One day at a time."];
-
-  document.addEventListener('DOMContentLoaded', () => {
-    // Elements
-    const $ = id => document.getElementById(id);
-    const loginScreen = $('loginScreen'), registerScreen = $('registerScreen'), mainAppScreen = $('mainAppScreen');
-    const calendarView = $('calendarView'), achievementsView = $('achievementsView'), leaderboardView = $('leaderboardView'), settingsView = $('settingsView');
-    const loginEmail = $('loginEmail'), loginPassword = $('loginPassword'), loginBtn = $('loginBtn'), showRegisterBtn = $('showRegisterBtn');
-    const regEmail = $('regEmail'), regUsername = $('regUsername'), regAge = $('regAge'), regWeight = $('regWeight'), regPassword = $('regPassword'), registerBtn = $('registerBtn'), backToLoginBtn = $('backToLoginBtn');
-    const userGreeting = $('userGreeting'), totalHabitsEl = $('totalHabits'), currentStreakEl = $('currentStreak'), userLevelEl = $('userLevel'), userXPEl = $('userXP');
-    const habitListContainer = $('habitListContainer'), tabMorning = $('tabMorning'), tabEvening = $('tabEvening'), addHabitFAB = $('addHabitFAB');
-    const logoutMainBtn = $('logoutMainBtn'), motivationalQuote = $('motivationalQuote');
-    const habitModal = $('habitModal'), habitName = $('habitName'), habitRepeat = $('habitRepeat'), customDaysContainer = $('customDaysContainer');
-    const reminderTimes = $('reminderTimes'), habitEmoji = $('habitEmoji'), habitNotes = $('habitNotes'), habitRoutine = $('habitRoutine'), saveHabitBtn = $('saveHabitBtn'), habitModalTitle = $('habitModalTitle');
-    const trackingMode = $('trackingMode'), deleteAccountBtn = $('deleteAccountBtn'), backFromSettings = $('backFromSettings');
-    const shareProgressBtn = $('shareProgressBtn'), showPrivacyBtn = $('showPrivacyBtn'), showFaqBtn = $('showFaqBtn');
-    const privacyModal = $('privacyModal'), faqModal = $('faqModal');
-    const calendarHabitSelect = $('calendarHabitSelect'), calendarGrid = $('calendarGrid');
-    const achievementsList = $('achievementsList'), leaderboardList = $('leaderboardList');
-    const navDashboard = $('navDashboard'), navCalendar = $('navCalendar'), navAchievements = $('navAchievements'), navLeaderboard = $('navLeaderboard'), navSettings = $('navSettings');
-    const themeOptions = document.querySelectorAll('.theme-option');
-
-    // Screen switching
-    function showScreen(screen) {
-      [loginScreen, registerScreen, mainAppScreen, calendarView, achievementsView, leaderboardView, settingsView].forEach(s => s.classList.remove('active'));
-      screen.classList.add('active');
-    }
-    function showMainView(view) {
-      [mainAppScreen, calendarView, achievementsView, leaderboardView, settingsView].forEach(v => v.classList.remove('active'));
-      view.classList.add('active');
-    }
-
-    // Auth
-    auth.onAuthStateChanged(async user => {
-      currentUser = user;
-      if (user) {
-        userDocRef = db.collection('users').doc(user.uid);
-        await loadUserData();
-        showScreen(mainAppScreen);
-        await loadHabits();
-        renderDashboard();
-        applySavedTheme();
-        requestNotificationPermission();
-      } else {
-        loginEmail.value = ''; loginPassword.value = '';
-        showScreen(loginScreen);
-      }
-    });
-
-    showRegisterBtn.addEventListener('click', () => showScreen(registerScreen));
-    backToLoginBtn.addEventListener('click', () => showScreen(loginScreen));
-    loginBtn.addEventListener('click', async () => {
-      try { await auth.signInWithEmailAndPassword(loginEmail.value.trim(), loginPassword.value); } catch(e) { alert(e.message); }
-    });
-    registerBtn.addEventListener('click', async () => {
-      try {
-        const cred = await auth.createUserWithEmailAndPassword(regEmail.value.trim(), regPassword.value);
-        await db.collection('users').doc(cred.user.uid).set({
-          email: regEmail.value.trim(), username: regUsername.value.trim() || 'User', age: regAge.value, weight: regWeight.value,
-          totalXP:0, level:1, badges:[], settings:{ theme:'midnight', trackingMode:'normal' }
-        });
-        await db.collection('leaderboard').doc(cred.user.uid).set({ username: regUsername.value.trim() || 'User', xp:0 });
-      } catch(e) { alert(e.message); }
-    });
-    logoutMainBtn.addEventListener('click', () => auth.signOut());
-
-    // User data
-    async function loadUserData() {
-      const doc = await userDocRef.get();
-      if (doc.exists) {
-        const d = doc.data();
-        userGreeting.textContent = `👋 ${d.username || 'User'}`;
-        userLevelEl.textContent = d.level||1; userXPEl.textContent = d.totalXP||0;
-        trackingMode.value = d.settings?.trackingMode || 'normal';
-        applyTheme(d.settings?.theme || 'midnight');
-      }
-    }
-
-    // Habits
-    async function loadHabits() { const snap = await userDocRef.collection('habits').get(); habits = snap.docs.map(d => ({id:d.id,...d.data()})); }
-    function getTodayStr() { return new Date().toISOString().split('T')[0]; }
-    function isToday(s) { return s === getTodayStr(); }
-    function habitScheduledToday(h) {
-      if (!h.repeatDays || h.repeatDays.length===0) return h.repeat==='daily' || h.repeat==='weekly';
-      return h.repeatDays.includes(new Date().getDay());
-    }
-
-    function renderDashboard() {
-      const morning = habits.filter(h => h.routine==='morning' && habitScheduledToday(h));
-      const evening = habits.filter(h => h.routine==='evening' && habitScheduledToday(h));
-      const display = currentRoutine==='morning'? morning : evening;
-      totalHabitsEl.textContent = habits.length;
-      let max=0; habits.forEach(h=>{if(h.streak>max) max=h.streak;});
-      currentStreakEl.textContent = max;
-      motivationalQuote.textContent = `“${quotes[Math.floor(Math.random()*quotes.length)]}”`;
-      habitListContainer.innerHTML = display.length ? display.map(h => {
-        const done = isToday(h.lastCompletedDate);
-        return `<div class="habit-item">
-          <div><span>${h.emoji||'✅'}</span> <strong>${h.name}</strong><br><small>${h.time||''} · ${h.repeat}</small></div>
-          <div style="display:flex; gap:0.5rem; align-items:center;">
-            <span class="streak-badge">${h.streak||0}</span>
-            <button class="btn complete-btn" data-id="${h.id}" ${done?'disabled':''} style="width:auto; padding:0.4rem;">${done?'✓':'Done'}</button>
-            <button class="btn edit-btn" data-id="${h.id}" style="width:auto; padding:0.4rem;"><i class="fas fa-edit"></i></button>
-          </div>
-        </div>`;
-      }).join('') : '<p style="text-align:center; color:var(--text-secondary);">No habits</p>';
-      document.querySelectorAll('.complete-btn').forEach(b => b.addEventListener('click', async e => { await completeHabit(e.currentTarget.dataset.id); }));
-      document.querySelectorAll('.edit-btn').forEach(b => b.addEventListener('click', e => openEditHabit(e.currentTarget.dataset.id)));
-    }
-
-    async function completeHabit(id) {
-      const ref = userDocRef.collection('habits').doc(id);
-      const h = habits.find(x=>x.id===id); if(!h || isToday(h.lastCompletedDate)) return;
-      const today = getTodayStr(), yesterday = new Date(Date.now()-86400000).toISOString().split('T')[0];
-      let streak = (h.streak||0); if(h.lastCompletedDate===yesterday) streak++; else streak=1;
-      await ref.update({ lastCompletedDate:today, streak });
-      const userDoc = await userDocRef.get(); const d = userDoc.data();
-      const xp = (d.totalXP||0)+10, level = Math.floor(xp/100)+1;
-      const badges = d.badges||[];
-      if(streak===7 && !badges.includes('7-day')) badges.push('7-day');
-      if(streak===30 && !badges.includes('30-day')) badges.push('30-day');
-      if(level > (d.level||1)) badges.push(`level-${level}`);
-      await userDocRef.update({ totalXP:xp, level, badges });
-      await db.collection('leaderboard').doc(currentUser.uid).set({ username:d.username, xp },{merge:true});
-      await loadHabits(); renderDashboard(); userLevelEl.textContent=level; userXPEl.textContent=xp;
-    }
-
-    function openEditHabit(id) {
-      const h = habits.find(x=>x.id===id); if(!h) return;
-      editingHabitId = id; habitModalTitle.textContent='Edit Habit';
-      habitName.value=h.name; habitRepeat.value=h.repeat||'daily';
-      reminderTimes.value=(h.reminderTimes||[]).join(','); habitEmoji.value=h.emoji||''; habitNotes.value=h.notes||''; habitRoutine.value=h.routine||'morning';
-      if(h.repeat==='custom') { customDaysContainer.style.display='flex'; document.querySelectorAll('#customDaysContainer input').forEach(cb=>cb.checked=(h.repeatDays||[]).includes(parseInt(cb.value))); }
-      else customDaysContainer.style.display='none';
-      habitModal.classList.add('active');
-    }
-
-    addHabitFAB.addEventListener('click', ()=>{
-      editingHabitId=null; habitModalTitle.textContent='New Habit';
-      habitName.value=''; habitRepeat.value='daily'; reminderTimes.value=''; habitEmoji.value=''; habitNotes.value=''; habitRoutine.value='morning';
-      customDaysContainer.style.display='none';
-      habitModal.classList.add('active');
-    });
-    habitRepeat.addEventListener('change', ()=>{ customDaysContainer.style.display = habitRepeat.value==='custom'?'flex':'none'; });
-
-    saveHabitBtn.addEventListener('click', async ()=>{
-      const name = habitName.value.trim(); if(!name) return alert('Name required');
-      const repeat = habitRepeat.value;
-      let repeatDays = [];
-      if(repeat==='custom') repeatDays = Array.from(document.querySelectorAll('#customDaysContainer input:checked')).map(cb=>parseInt(cb.value));
-      const data = {
-        name, repeat, repeatDays, time: reminderTimes.value.split(',')[0]?.trim()||'08:00',
-        reminderTimes: reminderTimes.value.split(',').map(s=>s.trim()).filter(Boolean),
-        emoji: habitEmoji.value || '✅', notes: habitNotes.value, routine: habitRoutine.value,
-        streak: editingHabitId ? (habits.find(h=>h.id===editingHabitId)?.streak||0) : 0,
-        lastCompletedDate: editingHabitId ? (habits.find(h=>h.id===editingHabitId)?.lastCompletedDate||null) : null
-      };
-      if(editingHabitId) await userDocRef.collection('habits').doc(editingHabitId).update(data);
-      else await userDocRef.collection('habits').add(data);
-      habitModal.classList.remove('active');
-      await loadHabits(); renderDashboard();
-    });
-
-    document.querySelectorAll('.close-modal').forEach(b => b.addEventListener('click', ()=>{ document.getElementById(b.dataset.modal).classList.remove('active'); }));
-    window.addEventListener('click', e => { if(e.target.classList.contains('modal')) e.target.classList.remove('active'); });
-
-    // Tabs & Navigation
-    tabMorning.addEventListener('click', ()=>{ currentRoutine='morning'; tabMorning.classList.add('active'); tabEvening.classList.remove('active'); renderDashboard(); });
-    tabEvening.addEventListener('click', ()=>{ currentRoutine='evening'; tabEvening.classList.add('active'); tabMorning.classList.remove('active'); renderDashboard(); });
-    navDashboard.addEventListener('click', ()=>{ showMainView(mainAppScreen); setActiveNav(navDashboard); });
-    navCalendar.addEventListener('click', ()=>{ showMainView(calendarView); populateCalendarHabits(); setActiveNav(navCalendar); });
-    navAchievements.addEventListener('click', ()=>{ showMainView(achievementsView); loadAchievements(); setActiveNav(navAchievements); });
-    navLeaderboard.addEventListener('click', ()=>{ showMainView(leaderboardView); loadLeaderboard(); setActiveNav(navLeaderboard); });
-    navSettings.addEventListener('click', ()=>{ showMainView(settingsView); setActiveNav(navSettings); });
-    function setActiveNav(btn) { document.querySelectorAll('.bottom-nav button').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
-    $('backFromCalendar').addEventListener('click', ()=> showMainView(mainAppScreen));
-    $('backFromAchievements').addEventListener('click', ()=> showMainView(mainAppScreen));
-    $('backFromLeaderboard').addEventListener('click', ()=> showMainView(mainAppScreen));
-    backFromSettings.addEventListener('click', ()=> showMainView(mainAppScreen));
-
-    // Calendar
-    async function populateCalendarHabits() {
-      calendarHabitSelect.innerHTML = habits.map(h => `<option value="${h.id}">${h.emoji||''} ${h.name}</option>`).join('');
-      if(habits.length) renderCalendar(habits[0].id);
-      calendarHabitSelect.onchange = ()=> renderCalendar(calendarHabitSelect.value);
-    }
-    function renderCalendar(habitId) {
-      const h = habits.find(x=>x.id===habitId); if(!h) return;
-      const now=new Date(), y=now.getFullYear(), m=now.getMonth();
-      const firstDay=new Date(y,m,1).getDay(), days=new Date(y,m+1,0).getDate();
-      let html='<div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>';
-      for(let i=0;i<firstDay;i++) html+='<div></div>';
-      for(let d=1;d<=days;d++){
-        const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        const completed = (h.completedDates||[]).includes(dateStr);
-        html+=`<div class="calendar-day${completed?' completed':''}">${d}</div>`;
-      }
-      calendarGrid.innerHTML=html;
-    }
-
-    // Achievements
-    async function loadAchievements() {
-      const doc = await userDocRef.get(); const badges = doc.data()?.badges||[];
-      achievementsList.innerHTML = badges.length ? badges.map(b=>`<p>🏅 ${b.replace(/-/g,' ')}</p>`).join('') : '<p>No achievements yet.</p>';
-    }
-
-    // Leaderboard
-    async function loadLeaderboard() {
-      const snap = await db.collection('leaderboard').orderBy('xp','desc').limit(20).get();
-      let html='<ol>'; snap.forEach(d=>{ const u=d.data(); html+=`<li>${u.username} – ${u.xp} XP</li>`; }); html+='</ol>';
-      leaderboardList.innerHTML=html;
-    }
-
-    // Share
-    shareProgressBtn.addEventListener('click', async ()=>{
-      const doc = await userDocRef.get(); const d = doc.data();
-      const text = `I'm level ${d.level} on GoaLMint with ${d.totalXP} XP! 🚀`;
-      if(navigator.share) navigator.share({title:'GoaLMint',text}); else alert('Copy: '+text);
-    });
-
-    // Privacy/FAQ
-    showPrivacyBtn.addEventListener('click', ()=> privacyModal.classList.add('active'));
-    showFaqBtn.addEventListener('click', ()=> faqModal.classList.add('active'));
-
-    // Delete
-    deleteAccountBtn.addEventListener('click', async ()=>{
-      if(confirm('Delete account?')){ await userDocRef.delete(); await db.collection('leaderboard').doc(currentUser.uid).delete(); await currentUser.delete(); }
-    });
-
-    // Themes
-    function applyTheme(theme) {
-      document.body.className = `theme-${theme}`;
-      themeOptions.forEach(o => o.classList.toggle('selected', o.dataset.theme===theme));
-      localStorage.setItem('goalMintTheme', theme);
-    }
-    function applySavedTheme() { applyTheme(localStorage.getItem('goalMintTheme')||'midnight'); }
-    themeOptions.forEach(o => o.addEventListener('click', async ()=>{ applyTheme(o.dataset.theme); if(currentUser) await userDocRef.update({'settings.theme':o.dataset.theme}); }));
-    applySavedTheme();
-
-    // Notifications
-    function requestNotificationPermission() {
-      if('Notification' in window && Notification.permission==='default') Notification.requestPermission();
-    }
-    setInterval(() => {
-      if(!currentUser) return;
-      const now = new Date();
-      const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-      habits.forEach(h => {
-        const times = h.reminderTimes || [h.time];
-        if(times.includes(timeStr) && habitScheduledToday(h) && !isToday(h.lastCompletedDate) && Notification.permission==='granted') {
-          new Notification(`⏰ ${h.name}`, {body:'Time to complete your habit!'});
-        }
-      });
-    }, 60000);
-    // Missed habit check at midnight
-    function scheduleMissedCheck() {
-      const now = new Date();
-      const msToMidnight = new Date(now.getFullYear(),now.getMonth(),now.getDate()+1).getTime() - now.getTime();
-      setTimeout(() => {
-        if(!currentUser) return;
-        habits.forEach(h => {
-          if(habitScheduledToday(h) && !isToday(h.lastCompletedDate) && Notification.permission==='granted') {
-            new Notification(`⚠️ Missed: ${h.name}`, {body:'You missed this habit today.'});
-          }
-        });
-        scheduleMissedCheck();
-      }, msToMidnight + 60000);
-    }
-    scheduleMissedCheck();
-  });
-</script>
+<script src="script.js"></script>
 </body>
 </html>
