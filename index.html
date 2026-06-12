@@ -35,21 +35,35 @@
     <button class="btn btn-outline" id="backToLoginBtn">← Back to login</button>
   </div>
 
-  <!-- MAIN APP DASHBOARD – clean, no referral card -->
+  <!-- MAIN APP DASHBOARD -->
   <div id="mainAppScreen" class="screen">
+    <!-- Daily Goal Bar -->
+    <div style="flex-shrink:0; margin-bottom:0.5rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.2rem;">
+        <span id="dailyGoalText" style="font-weight:600;">Today's Progress</span>
+        <span id="dailyGoalPercent" style="font-size:0.85rem; color:var(--text-secondary);">0%</span>
+      </div>
+      <div class="progress-bar" id="dailyGoalBar">
+        <div class="progress-fill" id="dailyGoalFill" style="width:0%;"></div>
+      </div>
+    </div>
+
     <div style="display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
       <h2 id="userGreeting">👋</h2>
       <button id="logoutMainBtn" class="btn" style="width:auto; padding:0.5rem 1rem;"><i class="fas fa-sign-out-alt"></i></button>
     </div>
     <div class="card" id="mentorMessage" style="font-size:0.9rem; margin-bottom:0.5rem; flex-shrink:0;"></div>
-    <div class="card" style="display:flex; justify-content:space-around; flex-wrap:wrap; gap:0.5rem; flex-shrink:0;">
-      <div>🎯 <span id="totalHabits">0</span></div>
-      <div>🔥 <span id="currentStreak">0</span></div>
-      <div>⭐ <span id="userIdentity">Beginner</span></div>
-      <div>💎 <span id="userXP">0</span> XP</div>
-      <div>🪙 <span id="mintCoins">0</span></div>
-      <div>🔒 <span id="mintTokens">0</span></div>
+
+    <!-- Stats Pills -->
+    <div class="stats-row" style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.5rem; flex-shrink:0;">
+      <div class="stat-pill"><span>🎯</span> <span id="totalHabits">0</span></div>
+      <div class="stat-pill"><span>🔥</span> <span id="currentStreak">0</span> <span style="font-size:0.7rem;">streak</span></div>
+      <div class="stat-pill"><span>⭐</span> <span id="userIdentity">Beginner</span></div>
+      <div class="stat-pill"><span>💎</span> <span id="userXP">0</span> <span style="font-size:0.7rem;">XP</span></div>
+      <div class="stat-pill"><span>🪙</span> <span id="mintCoins">0</span> <span style="font-size:0.7rem;">coins</span></div>
+      <div class="stat-pill"><span>🔒</span> <span id="mintTokens">0</span> <span style="font-size:0.7rem;">tokens</span></div>
     </div>
+
     <div class="tabs" style="flex-shrink:0;">
       <div class="tab active" id="tabMorning">🌅 Morning</div>
       <div class="tab" id="tabEvening">🌙 Evening</div>
@@ -59,19 +73,29 @@
     </select>
     <div id="habitListContainer" style="flex:1; overflow-y:auto; min-height:0;"></div>
     <div id="habitInsight" class="card" style="font-size:0.85rem; display:none; flex-shrink:0;"></div>
-    <button class="btn btn-primary" id="addHabitFAB" style="flex-shrink:0; margin-bottom:0.5rem;"><i class="fas fa-plus"></i> New Habit</button>
-    <!-- Bottom Navigation -->
+
+    <!-- Floating Add Button -->
+    <button id="addHabitFAB" class="fab-btn" style="position:fixed; bottom:100px; right:20px; z-index:50;">+</button>
+
+    <!-- Bottom Navigation (5 tabs) -->
     <div class="bottom-nav" style="flex-shrink:0; overflow-x:auto; white-space:nowrap; display:flex; justify-content:space-around; padding:0.5rem 0.2rem; background:var(--bg); border-top:2px solid var(--accent); min-height:4rem; align-items:center;">
       <button id="navDashboard" class="active" style="flex-direction:column; gap:0.2rem; font-size:0.9rem;"><i class="fas fa-home"></i><span style="font-size:0.65rem;">Home</span></button>
-      <button id="navDNA" style="flex-direction:column; gap:0.2rem; font-size:0.9rem;"><i class="fas fa-dna"></i><span style="font-size:0.65rem;">DNA</span></button>
       <button id="navCity" style="flex-direction:column; gap:0.2rem; font-size:0.9rem;"><i class="fas fa-city"></i><span style="font-size:0.65rem;">City</span></button>
-      <button id="navMessages" style="flex-direction:column; gap:0.2rem; font-size:0.9rem;"><i class="fas fa-envelope"></i><span style="font-size:0.65rem;">Messages</span></button>
-      <button id="navBoss" style="flex-direction:column; gap:0.2rem; font-size:0.9rem;"><i class="fas fa-skull"></i><span style="font-size:0.65rem;">Boss</span></button>
-      <button id="navChapters" style="flex-direction:column; gap:0.2rem; font-size:0.9rem;"><i class="fas fa-book"></i><span style="font-size:0.65rem;">Chapters</span></button>
-      <button id="navImpact" style="flex-direction:column; gap:0.2rem; font-size:0.9rem;"><i class="fas fa-globe-americas"></i><span style="font-size:0.65rem;">Impact</span></button>
-      <button id="navAchievements" style="flex-direction:column; gap:0.2rem; font-size:0.9rem;"><i class="fas fa-trophy"></i><span style="font-size:0.65rem;">Trophies</span></button>
-      <button id="navLeaderboard" style="flex-direction:column; gap:0.2rem; font-size:0.9rem;"><i class="fas fa-list-ol"></i><span style="font-size:0.65rem;">Rank</span></button>
-      <button id="navSettings" style="flex-direction:column; gap:0.2rem; font-size:0.9rem;"><i class="fas fa-cog"></i><span style="font-size:0.65rem;">Settings</span></button>
+      <button id="navChallenges" style="flex-direction:column; gap:0.2rem; font-size:0.9rem;"><i class="fas fa-trophy"></i><span style="font-size:0.65rem;">Challenges</span></button>
+      <button id="navProgress" style="flex-direction:column; gap:0.2rem; font-size:0.9rem;"><i class="fas fa-chart-line"></i><span style="font-size:0.65rem;">Progress</span></button>
+      <button id="navMore" style="flex-direction:column; gap:0.2rem; font-size:0.9rem;"><i class="fas fa-ellipsis-h"></i><span style="font-size:0.65rem;">More</span></button>
+    </div>
+
+    <!-- More Menu (hidden) -->
+    <div id="moreMenu" style="position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:var(--bg-card); border-radius:1.5rem; padding:1rem; display:none; flex-wrap:wrap; gap:0.8rem; z-index:60; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
+      <button id="moreDNA" class="btn btn-small" style="width:auto;">🧬 DNA</button>
+      <button id="moreMessages" class="btn btn-small" style="width:auto;">✉️ Messages</button>
+      <button id="moreBoss" class="btn btn-small" style="width:auto;">⚔️ Boss</button>
+      <button id="moreChapters" class="btn btn-small" style="width:auto;">📖 Chapters</button>
+      <button id="moreImpact" class="btn btn-small" style="width:auto;">🌍 Impact</button>
+      <button id="moreAchievements" class="btn btn-small" style="width:auto;">🏆 Achievements</button>
+      <button id="moreLeaderboard" class="btn btn-small" style="width:auto;">🏅 Leaderboard</button>
+      <button id="moreSettings" class="btn btn-small" style="width:auto;">⚙️ Settings</button>
     </div>
   </div>
 
@@ -82,23 +106,21 @@
     <button class="btn" id="backFromDNA">← Back</button>
   </div>
 
-  <!-- CITY BUILDER (canvas) -->
-  <<!-- CITY BUILDER (3D) -->
-<div id="cityScreen" class="screen">
-  <h2>🏙️ My 3D City</h2>
-  <div class="card" style="display:flex; justify-content:space-around; text-align:center;">
-    <div><div style="font-size:1.5rem;">🌳</div><div><span id="parkCount">0</span> Parks</div></div>
-    <div><div style="font-size:1.5rem;">📚</div><div><span id="libraryCount">0</span> Libraries</div></div>
-    <div><div style="font-size:1.5rem;">🏢</div><div><span id="officeCount">0</span> Offices</div></div>
-    <div><div style="font-size:1.5rem;">🎨</div><div><span id="galleryCount">0</span> Galleries</div></div>
+  <!-- CITY BUILDER (3D) -->
+  <div id="cityScreen" class="screen">
+    <h2>🏙️ My 3D City</h2>
+    <div class="card" style="display:flex; justify-content:space-around; text-align:center;">
+      <div><div style="font-size:1.5rem;">🌳</div><div><span id="parkCount">0</span> Parks</div></div>
+      <div><div style="font-size:1.5rem;">📚</div><div><span id="libraryCount">0</span> Libraries</div></div>
+      <div><div style="font-size:1.5rem;">🏢</div><div><span id="officeCount">0</span> Offices</div></div>
+      <div><div style="font-size:1.5rem;">🎨</div><div><span id="galleryCount">0</span> Galleries</div></div>
+    </div>
+    <div id="three-container" style="width:100%; height:400px; border-radius:1rem; overflow:hidden; margin:1rem 0; background:#87CEEB;"></div>
+    <p style="text-align:center; color: var(--text-secondary); font-style: italic;">
+      Drag to rotate • Pinch to zoom • Complete habits to grow! 🌆
+    </p>
+    <button class="btn" id="backFromCity">← Back</button>
   </div>
-  <!-- 3D container -->
-  <div id="three-container" style="width:100%; height:400px; border-radius:1rem; overflow:hidden; margin:1rem 0; background:#87CEEB;"></div>
-  <p style="text-align:center; color: var(--text-secondary); font-style: italic;">
-    Drag to rotate • Pinch to zoom • Complete habits to grow! 🌆
-  </p>
-  <button class="btn" id="backFromCity">← Back</button>
-</div>
 
   <!-- FUTURE SELF MESSAGES -->
   <div id="messagesScreen" class="screen">
@@ -145,7 +167,7 @@
     <button class="btn" id="backFromLeaderboard">← Back</button>
   </div>
 
-  <!-- SETTINGS – now includes referral code -->
+  <!-- SETTINGS – includes referral code -->
   <div id="settingsView" class="screen">
     <h2>⚙️ Settings</h2>
     <div class="card">
@@ -168,7 +190,6 @@
       <p><strong>Current Theme:</strong> <span id="currentThemeName">Midnight</span></p>
       <button class="btn" id="openShopFromSettings">🛒 Buy Themes in Mint Shop</button>
     </div>
-    <!-- Referral section moved here -->
     <div class="referral-card">
       <p><strong>🔗 Your Referral Code</strong></p>
       <span class="referral-code" id="myReferralCode">Loading...</span>
@@ -194,7 +215,7 @@
       <h3>📖 How GoaLMint Works</h3>
       <div style="font-size:0.9rem; line-height:1.6;">
         <p><strong>🏠 Dashboard:</strong> View today's habits, streaks, XP, coins, and tokens. Switch between Morning/Evening routines.</p>
-        <p><strong>➕ Adding Habits:</strong> Tap "New Habit" - choose name, category (Health/Learning/Productivity/Creativity), repeat schedule, reminder times, and routine type.</p>
+        <p><strong>➕ Adding Habits:</strong> Tap "+" to add a new habit with category, schedule, reminders, and more.</p>
         <p><strong>✅ Completing Habits:</strong> Tap "Done" on any habit. You earn +1 Mint Coin, +10 XP, and your streak increases. <em>After the day passes, only Streak Tokens can save missed days.</em></p>
         <p><strong>🏙️ Virtual City:</strong> Each completed habit builds a real building in your city! Health→Parks, Learning→Libraries, Productivity→Offices, Creativity→Galleries. Watch your city grow with animated clouds, trees, and buildings.</p>
         <p><strong>🛒 Mint Shop:</strong> Spend Mint Coins on 30 premium themes and XP packs. Earn coins by completing habits.</p>
@@ -336,11 +357,10 @@
     </div>
   </div>
 </div>
-<!-- Add these BEFORE your script.js -->
+
+<!-- Three.js & Firebase -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-
-<!-- Then your existing Firebase scripts and script.js -->
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
