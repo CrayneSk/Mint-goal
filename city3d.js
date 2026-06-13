@@ -1,22 +1,19 @@
-// city3d.js – GoaLMint SimCity-style 3D city
+// city3d.js – GoaLMint SimCity-style 3D city (fixed)
 let threeCity = null;
 
 class ThreeCity {
   constructor(container) {
     this.container = container;
     this.scene = new THREE.Scene();
-    this.clock = new THREE.Clock();           // for day/night cycle
+    this.clock = new THREE.Clock();
 
-    // ---- Day/Night state ----
-    this.dayDuration = 120;                   // seconds for full cycle (adjust for testing)
-    this.timeOfDay = 0;                       // 0 .. this.dayDuration
+    // Day/Night state
+    this.dayDuration = 120;
+    this.timeOfDay = 0;
     this.sunLight = null;
     this.ambientLight = null;
-    this.streetLights = [];                   // array of point lights
+    this.streetLights = [];
     this.isNight = false;
-
-    // Sky dome (simple color transition)
-    this.skyColor = new THREE.Color(0x87CEEB);
 
     // Camera
     const aspect = container.clientWidth / container.clientHeight;
@@ -31,16 +28,17 @@ class ThreeCity {
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(this.renderer.domElement);
 
-    // Controls (only for pan/rotate, drag disabled by default)
+    // Orbit controls (for pan/rotate)
     this.orbitControls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
     this.orbitControls.enableDamping = true;
     this.orbitControls.dampingFactor = 0.05;
     this.orbitControls.maxPolarAngle = Math.PI / 2.5;
     this.orbitControls.target.set(0, 0, 0);
 
-    // ---- Drag controls for buildings ----
-    this.dragControls = null;                 // we'll set it up after buildings exist
-    this.buildMode = false;                   // toggled by a button
+    // Drag controls – only if the library is loaded
+    this.dragControls = null;
+    this.buildMode = false;
+    // We’ll set up drag controls in setupDragControls() later
 
     // Lights
     this.ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -59,7 +57,7 @@ class ThreeCity {
     this.sunLight.shadow.camera.bottom = -30;
     this.scene.add(this.sunLight);
 
-    // Ground (grass)
+    // Ground
     const groundGeo = new THREE.PlaneGeometry(80, 80);
     const groundMat = new THREE.MeshStandardMaterial({ color: 0x7CB342, roughness: 0.9 });
     const ground = new THREE.Mesh(groundGeo, groundMat);
@@ -67,24 +65,22 @@ class ThreeCity {
     ground.receiveShadow = true;
     this.scene.add(ground);
 
-    // Road network (initially empty)
+    // Roads & buildings arrays
     this.roadMeshes = [];
-    this.roadsData = [];          // { start: {x,z}, end: {x,z} }
-
-    // Buildings & trees
+    this.roadsData = [];
     this.buildingGroups = [];
     this.trees = [];
 
     // Avatar
     this.avatar = null;
-    this.avatarPath = [];         // points for walking
+    this.avatarPath = [];
     this.avatarSpeed = 0.02;
 
-    // Animation loop
+    // Start animation
     this.animationId = null;
     this.animate();
 
-    // ---- Create Build Mode Toggle Button (inside container) ----
+    // Create the Build Mode button
     this.createBuildModeButton();
   }
 
@@ -102,43 +98,39 @@ class ThreeCity {
     btn.style.fontWeight = 'bold';
     btn.style.cursor = 'pointer';
     btn.addEventListener('click', () => {
-      this.buildMode = !this.buildMode;
-      btn.textContent = this.buildMode ? '🛠️ Move Buildings' : '🛠️ Build Mode';
-      // Enable/disable drag controls
-      if (this.dragControls) {
-        this.dragControls.enabled = this.buildMode;
+      if (!this.dragControls) {
+        alert('Drag controls not available');
+        return;
       }
-      // Disable orbit controls when in build mode (so we can drag)
+      this.buildMode = !this.buildMode;
+      btn.textContent = this.buildMode ? '🛠️ Moving…' : '🛠️ Build Mode';
+      this.dragControls.enabled = this.buildMode;
+      if (this.buildMode) {
+        // Only allow moving non‑park buildings
+        this.dragControls.objects = this.buildingGroups.filter(g => g.userData.type !== 'park');
+      }
       this.orbitControls.enabled = !this.buildMode;
     });
-    // Make container position relative
     this.container.style.position = 'relative';
     this.container.appendChild(btn);
   }
 
-  // ---- Day/Night cycle ----
   updateDayNight(delta) {
     this.timeOfDay += delta;
     if (this.timeOfDay > this.dayDuration) this.timeOfDay -= this.dayDuration;
-    const progress = this.timeOfDay / this.dayDuration; // 0..1
-
-    // Sun position: circle in the sky
+    const progress = this.timeOfDay / this.dayDuration;
     const angle = progress * Math.PI * 2;
     const sunHeight = Math.sin(angle) * 40;
     const sunX = Math.cos(angle) * 40;
     this.sunLight.position.set(sunX, sunHeight, 20);
     this.sunLight.intensity = Math.max(0.2, Math.sin(angle) * 1.2);
 
-    // Sky color
     const dayColor = new THREE.Color(0x87CEEB);
     const nightColor = new THREE.Color(0x0a0a2e);
-    const mix = (Math.sin(angle) + 1) / 2; // 0 at night, 1 at day
+    const mix = (Math.sin(angle) + 1) / 2;
     this.scene.background = dayColor.clone().lerp(nightColor, 1 - mix);
-
-    // Ambient light
     this.ambientLight.intensity = 0.2 + mix * 0.6;
 
-    // Street lights & building windows emissive
     const isNight = mix < 0.3;
     if (isNight !== this.isNight) {
       this.isNight = isNight;
@@ -147,11 +139,7 @@ class ThreeCity {
   }
 
   toggleNightLights(on) {
-    // Street lights
-    this.streetLights.forEach(light => {
-      light.intensity = on ? 0.8 : 0;
-    });
-    // Building windows emissive
+    this.streetLights.forEach(light => { light.intensity = on ? 0.8 : 0; });
     this.buildingGroups.forEach(group => {
       group.children.forEach(child => {
         if (child.material && child.material.emissive) {
@@ -161,13 +149,11 @@ class ThreeCity {
     });
   }
 
-  // ---- Data loading ----
   updateFromData(cityData, roads, avatarAppearance) {
     // Remove old buildings
     this.buildingGroups.forEach(group => this.scene.remove(group));
     this.buildingGroups = [];
 
-    // Build new buildings (parks, libraries, offices, galleries)
     const types = {
       park: (x, z) => this.createPark(x, z),
       library: (x, z) => this.createLibrary(x, z),
@@ -195,11 +181,10 @@ class ThreeCity {
     // Avatar
     this.createAvatar(avatarAppearance);
 
-    // Rebuild drag controls for new buildings
+    // Setup drag controls (safely)
     this.setupDragControls();
   }
 
-  // ---- Building types (enhanced with more details) ----
   createPark(x, z) {
     const group = new THREE.Group();
     const grassGeo = new THREE.BoxGeometry(4, 0.1, 4);
@@ -210,7 +195,6 @@ class ThreeCity {
     grass.castShadow = true;
     group.add(grass);
 
-    // Trees
     for (let i = 0; i < 3; i++) {
       const treeGroup = new THREE.Group();
       const trunk = new THREE.Mesh(
@@ -259,7 +243,6 @@ class ThreeCity {
     roof.receiveShadow = true;
     group.add(roof);
 
-    // Windows (glowing at night)
     for (let row = 0; row < 2; row++) {
       for (let col = 0; col < 3; col++) {
         const win = new THREE.Mesh(
@@ -339,11 +322,11 @@ class ThreeCity {
     return group;
   }
 
-  // ---- Roads ----
   drawRoads() {
-    // Remove old roads
     this.roadMeshes.forEach(mesh => this.scene.remove(mesh));
     this.roadMeshes = [];
+    this.streetLights.forEach(light => this.scene.remove(light));
+    this.streetLights = [];
 
     this.roadsData.forEach(seg => {
       const start = new THREE.Vector3(seg.start.x, 0.01, seg.start.z);
@@ -362,13 +345,11 @@ class ThreeCity {
       this.scene.add(road);
       this.roadMeshes.push(road);
 
-      // Dashed center line
-      const dashes = 10;
-      for (let i = 0; i < dashes; i++) {
+      for (let i = 0; i < 10; i++) {
         const lineGeo = new THREE.BoxGeometry(1, 0.02, 0.1);
         const lineMat = new THREE.MeshStandardMaterial({ color: 0xFFC107 });
         const line = new THREE.Mesh(lineGeo, lineMat);
-        const t = (i + 0.5) / dashes;
+        const t = (i + 0.5) / 10;
         line.position.copy(start.clone().lerp(end, t));
         line.position.y = 0.03;
         line.receiveShadow = true;
@@ -377,9 +358,6 @@ class ThreeCity {
       }
     });
 
-    // Place street lights along roads
-    this.streetLights.forEach(light => this.scene.remove(light));
-    this.streetLights = [];
     this.roadsData.forEach(seg => {
       const start = new THREE.Vector3(seg.start.x, 0.01, seg.start.z);
       const end = new THREE.Vector3(seg.end.x, 0.01, seg.end.z);
@@ -407,51 +385,42 @@ class ThreeCity {
     });
   }
 
-  // ---- Avatar ----
   createAvatar(appearance = {}) {
-    if (this.avatar) {
-      this.scene.remove(this.avatar);
-    }
+    if (this.avatar) this.scene.remove(this.avatar);
     const group = new THREE.Group();
 
-    // Body
-    const bodyGeo = new THREE.CylinderGeometry(0.3, 0.4, 1.2, 6);
-    const bodyMat = new THREE.MeshStandardMaterial({ color: appearance.bodyColor || 0x2196F3 });
-    const body = new THREE.Mesh(bodyGeo, bodyMat);
+    const body = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.3, 0.4, 1.2, 6),
+      new THREE.MeshStandardMaterial({ color: appearance.bodyColor || 0x2196F3 })
+    );
     body.position.y = 0.6;
     body.castShadow = true;
     group.add(body);
 
-    // Head
-    const headGeo = new THREE.SphereGeometry(0.3, 8, 8);
-    const headMat = new THREE.MeshStandardMaterial({ color: 0xFFD93D });
-    const head = new THREE.Mesh(headGeo, headMat);
+    const head = new THREE.Mesh(
+      new THREE.SphereGeometry(0.3, 8, 8),
+      new THREE.MeshStandardMaterial({ color: 0xFFD93D })
+    );
     head.position.y = 1.4;
     head.castShadow = true;
     group.add(head);
 
-    // Hat (if learning habits)
     if (appearance.hat) {
-      const hatGeo = new THREE.ConeGeometry(0.3, 0.4, 6);
-      const hatMat = new THREE.MeshStandardMaterial({ color: 0x000000 });
-      const hat = new THREE.Mesh(hatGeo, hatMat);
+      const hat = new THREE.Mesh(
+        new THREE.ConeGeometry(0.3, 0.4, 6),
+        new THREE.MeshStandardMaterial({ color: 0x000000 })
+      );
       hat.position.y = 1.7;
       group.add(hat);
     }
 
-    // Arms, legs (simple cylinders)
-    // ... (omitted for brevity – you can expand)
-
     group.position.set(0, 0, 0);
     this.scene.add(group);
     this.avatar = group;
-
-    // Generate a walking path along roads
     this.generateAvatarPath();
   }
 
   generateAvatarPath() {
-    // Simple: follow first road segment back and forth
     if (this.roadsData.length > 0) {
       const seg = this.roadsData[0];
       this.avatarPath = [
@@ -469,7 +438,6 @@ class ThreeCity {
     const target = this.avatarPath[1];
     const direction = new THREE.Vector3().subVectors(target, pos);
     if (direction.length() < 0.1) {
-      // Swap path
       this.avatarPath.reverse();
     }
     direction.normalize();
@@ -477,13 +445,16 @@ class ThreeCity {
     this.avatar.position.copy(pos);
   }
 
-  // ---- Drag controls ----
   setupDragControls() {
+    // Only setup if DragControls is loaded
+    if (typeof THREE.DragControls === 'undefined') {
+      this.dragControls = null;
+      return;
+    }
     if (this.dragControls) {
       this.dragControls.dispose();
     }
-    // DragControls needs the objects array
-    const objects = this.buildingGroups.filter(g => g.userData.type !== 'park'); // don't move parks?
+    const objects = this.buildingGroups.filter(g => g.userData.type !== 'park');
     this.dragControls = new THREE.DragControls(objects, this.camera, this.renderer.domElement);
     this.dragControls.enabled = this.buildMode;
 
@@ -492,23 +463,20 @@ class ThreeCity {
     });
     this.dragControls.addEventListener('dragend', (event) => {
       this.orbitControls.enabled = !this.buildMode;
-      // Save new position to Firebase
       const group = event.object;
-      const id = group.userData.id;
-      const newPos = { x: group.position.x, z: group.position.z };
-      // We'll call an external function (defined in script.js) to update Firestore
-      if (window.onBuildingMoved) {
-        window.onBuildingMoved(id, newPos);
+      if (window.onBuildingMoved && group.userData.id) {
+        window.onBuildingMoved(group.userData.id, {
+          x: group.position.x,
+          z: group.position.z
+        });
       }
     });
   }
 
-  // ---- Animation loop ----
   animate() {
     const delta = this.clock.getDelta();
     this.updateDayNight(delta);
     this.updateAvatar(delta);
-
     this.orbitControls.update();
     this.renderer.render(this.scene, this.camera);
     this.animationId = requestAnimationFrame(() => this.animate());
@@ -521,7 +489,7 @@ class ThreeCity {
   }
 }
 
-// ---- City loader (called from script.js) ----
+// ---- Global render function (called from script.js) ----
 async function renderCity() {
   const container = document.getElementById('three-container');
   if (!container || !window.userDocRef) return;
@@ -542,25 +510,19 @@ async function renderCity() {
   const data = doc.data() || {};
   const cityBuildings = data.cityBuildings || { park: 0, library: 0, office: 0, gallery: 0 };
   const roads = data.roads || [];
-  // Avatar appearance based on habits
   const habits = window.habits || [];
-  const learningCount = habits.filter(h => h.category === 'learning').length;
-  const healthCount = habits.filter(h => h.category === 'health').length;
-  const avatarAppearance = {
-    hat: learningCount >= 3,
-    bodyColor: healthCount >= 3 ? 0xFF5722 : 0x2196F3
-  };
+  const learning = habits.filter(h => h.category === 'learning').length;
+  const health = habits.filter(h => h.category === 'health').length;
+  const avatarApp = { hat: learning >= 3, bodyColor: health >= 3 ? 0xFF5722 : 0x2196F3 };
 
-  // Update UI counters
   if (window.parkCount) window.parkCount.textContent = cityBuildings.park || 0;
   if (window.libraryCount) window.libraryCount.textContent = cityBuildings.library || 0;
   if (window.officeCount) window.officeCount.textContent = cityBuildings.office || 0;
   if (window.galleryCount) window.galleryCount.textContent = cityBuildings.gallery || 0;
 
-  threeCity.updateFromData(cityBuildings, roads, avatarAppearance);
+  threeCity.updateFromData(cityBuildings, roads, avatarApp);
 }
 
-// Expose a global function for building position updates
 window.onBuildingMoved = async (buildingId, newPos) => {
-  // We'll implement the actual Firestore update in script.js (see next section)
+  // Connected to script.js
 };
