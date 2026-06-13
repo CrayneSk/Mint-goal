@@ -324,3 +324,30 @@ input:focus, select:focus, textarea:focus { border-color:var(--accent); }
   .screen { padding: 1rem; }
   .bottom-nav button { font-size: 1rem; padding: 0.2rem 0; }
 }
+
+/* Avatar Showcase */
+#avatarShowcase {
+  background: var(--bg-card);
+  border-radius: 1.5rem;
+  padding: 0.8rem 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+#avatarIcon { font-size: 2.5rem; }
+#avatarLargeIcon { font-size: 5rem; }
+
+/* Cosmetics shop item */
+.cosmetic-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg);
+  border-radius: 1rem;
+  padding: 0.6rem 1rem;
+  margin: 0.5rem 0;
+}
+.cosmetic-item button {
+  width: auto;
+  padding: 0.3rem 1rem;
+}
