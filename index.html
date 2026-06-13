@@ -217,7 +217,7 @@
         <p><strong>🏠 Dashboard:</strong> View today's habits, streaks, XP, coins, and tokens. Switch between Morning/Evening routines.</p>
         <p><strong>➕ Adding Habits:</strong> Tap "+" to add a new habit with category, schedule, reminders, and more.</p>
         <p><strong>✅ Completing Habits:</strong> Tap "Done" on any habit. You earn +1 Mint Coin, +10 XP, and your streak increases. <em>After the day passes, only Streak Tokens can save missed days.</em></p>
-        <p><strong>🏙️ Virtual City:</strong> Each completed habit builds a real building in your city! Health→Parks, Learning→Libraries, Productivity→Offices, Creativity→Galleries. Watch your city grow with animated clouds, trees, and buildings.</p>
+        <p><strong>🏙️ Virtual City:</strong> Each completed habit builds a real building in your city! Health→Parks, Learning→Libraries, Productivity→Offices, Creativity→Galleries, Infrastructure→Roads. Watch your city grow with a day/night cycle, street lights, and movable buildings.</p>
         <p><strong>🛒 Mint Shop:</strong> Spend Mint Coins on 30 premium themes and XP packs. Earn coins by completing habits.</p>
         <p><strong>🛡️ Streak Insurance:</strong> Earn Streak Tokens every 7-day streak. Use 1 token to save a missed day.</p>
         <p><strong>⚔️ Boss Battles:</strong> Start a challenge. Each daily completion damages the boss. Missed days heal it. Defeat bosses for rewards!</p>
@@ -234,7 +234,7 @@
     </div>
   </div>
 
-  <!-- HABIT FORM MODAL -->
+  <!-- HABIT FORM MODAL (updated with Infrastructure category) -->
   <div id="habitModal" class="modal">
     <div class="modal-content">
       <span class="close-modal" data-modal="habitModal">&times;</span>
@@ -245,6 +245,7 @@
         <option value="learning">Learning</option>
         <option value="productivity">Productivity</option>
         <option value="creativity">Creativity</option>
+        <option value="infrastructure">Infrastructure</option>
       </select>
       <select id="habitRepeat">
         <option value="daily">Daily</option>
@@ -358,7 +359,8 @@
   </div>
 </div>
 
-<<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 
@@ -370,9 +372,10 @@
 <!-- Three.js for 3D city -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/DragControls.js"></script>
 <script src="city3d.js"></script>
 
 <!-- Main app logic -->
-<script src="script.js"></script>></script>
+<script src="script.js"></script>
 </body>
 </html>
