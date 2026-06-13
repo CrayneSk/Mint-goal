@@ -1,4 +1,3 @@
-```javascript
 // script.js – GoaLMint with Avatar System (no city)
 let currentUser = null, userDocRef = null, habits = [], currentRoutine = 'morning', editingHabitId = null;
 let lastCompletedHabitTime = null, lastCompletedHabitId = null;
@@ -81,7 +80,6 @@ document.addEventListener('DOMContentLoaded', () => {
     avatarStatStrength, avatarStatKnowledge, avatarStatFocus, avatarStatCreativity,
     cosmeticsShop
   });
-  // Expose mintCoinsEl globally for avatar purchases
   window.mintCoinsEl = mintCoinsEl;
 
   // --- SCREEN SWITCH ---
@@ -95,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
     currentUser = user;
     if (user) {
       userDocRef = db.collection('users').doc(user.uid);
-      window.userDocRef = userDocRef;   // ✅ expose globally
+      window.userDocRef = userDocRef;
       await loadUserData();
       showScreen(mainAppScreen);
       await loadHabits();
@@ -138,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
         referralCode
       };
       await db.collection('users').doc(uid).set(userData);
-      window.userDocRef = db.collection('users').doc(uid);   // ✅ expose globally
+      window.userDocRef = db.collection('users').doc(uid);
       await db.collection('referralCodes').doc(referralCode).set({ userId: uid });
       await db.collection('leaderboard').doc(uid).set({ username, xp: 0 });
 
@@ -308,7 +306,6 @@ document.addEventListener('DOMContentLoaded', () => {
     await userDocRef.update({ totalXP: xp, level, badges, mintCoins: newCoins, mintTokens: newTokens, identity: getIdentity(xp) });
     await db.collection('leaderboard').doc(currentUser.uid).set({ username: d.username, xp }, { merge: true });
 
-    // Increment avatar stat
     if (h.category) {
       AvatarSystem.incrementStat(h.category);
     }
@@ -708,4 +705,3 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }, 60000);
 });
-```
