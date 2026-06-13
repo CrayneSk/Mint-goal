@@ -1,78 +1,173 @@
-// city3d.js
+// city3d.js – GoaLMint SimCity-style 3D city
 let threeCity = null;
 
 class ThreeCity {
   constructor(container) {
     this.container = container;
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x87CEEB);
+    this.clock = new THREE.Clock();           // for day/night cycle
 
+    // ---- Day/Night state ----
+    this.dayDuration = 120;                   // seconds for full cycle (adjust for testing)
+    this.timeOfDay = 0;                       // 0 .. this.dayDuration
+    this.sunLight = null;
+    this.ambientLight = null;
+    this.streetLights = [];                   // array of point lights
+    this.isNight = false;
+
+    // Sky dome (simple color transition)
+    this.skyColor = new THREE.Color(0x87CEEB);
+
+    // Camera
     const aspect = container.clientWidth / container.clientHeight;
     this.camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
-    this.camera.position.set(20, 15, 20);
+    this.camera.position.set(25, 20, 25);
     this.camera.lookAt(0, 0, 0);
 
+    // Renderer
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setSize(container.clientWidth, container.clientHeight);
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(this.renderer.domElement);
 
-    this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
-    this.controls.enableDamping = true;
-    this.controls.dampingFactor = 0.05;
-    this.controls.maxPolarAngle = Math.PI / 2.5;
-    this.controls.target.set(0, 0, 0);
+    // Controls (only for pan/rotate, drag disabled by default)
+    this.orbitControls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+    this.orbitControls.enableDamping = true;
+    this.orbitControls.dampingFactor = 0.05;
+    this.orbitControls.maxPolarAngle = Math.PI / 2.5;
+    this.orbitControls.target.set(0, 0, 0);
 
-    const ambient = new THREE.AmbientLight(0xffffff, 0.6);
-    this.scene.add(ambient);
+    // ---- Drag controls for buildings ----
+    this.dragControls = null;                 // we'll set it up after buildings exist
+    this.buildMode = false;                   // toggled by a button
 
-    const sun = new THREE.DirectionalLight(0xffffff, 0.8);
-    sun.position.set(50, 50, 50);
-    sun.castShadow = true;
-    sun.shadow.mapSize.width = 1024;
-    sun.shadow.mapSize.height = 1024;
-    sun.shadow.camera.near = 1;
-    sun.shadow.camera.far = 100;
-    sun.shadow.camera.left = -30;
-    sun.shadow.camera.right = 30;
-    sun.shadow.camera.top = 30;
-    sun.shadow.camera.bottom = -30;
-    this.scene.add(sun);
+    // Lights
+    this.ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    this.scene.add(this.ambientLight);
 
-    const groundGeo = new THREE.PlaneGeometry(60, 60);
-    const groundMat = new THREE.MeshStandardMaterial({ color: 0x7CB342, roughness: 0.8 });
+    this.sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    this.sunLight.position.set(50, 50, 50);
+    this.sunLight.castShadow = true;
+    this.sunLight.shadow.mapSize.width = 1024;
+    this.sunLight.shadow.mapSize.height = 1024;
+    this.sunLight.shadow.camera.near = 1;
+    this.sunLight.shadow.camera.far = 100;
+    this.sunLight.shadow.camera.left = -30;
+    this.sunLight.shadow.camera.right = 30;
+    this.sunLight.shadow.camera.top = 30;
+    this.sunLight.shadow.camera.bottom = -30;
+    this.scene.add(this.sunLight);
+
+    // Ground (grass)
+    const groundGeo = new THREE.PlaneGeometry(80, 80);
+    const groundMat = new THREE.MeshStandardMaterial({ color: 0x7CB342, roughness: 0.9 });
     const ground = new THREE.Mesh(groundGeo, groundMat);
     ground.rotation.x = -Math.PI / 2;
     ground.receiveShadow = true;
     this.scene.add(ground);
 
-    const roadGeo = new THREE.PlaneGeometry(60, 3);
-    const roadMat = new THREE.MeshStandardMaterial({ color: 0x424242, roughness: 0.9 });
-    const road = new THREE.Mesh(roadGeo, roadMat);
-    road.rotation.x = -Math.PI / 2;
-    road.position.y = 0.01;
-    road.receiveShadow = true;
-    this.scene.add(road);
+    // Road network (initially empty)
+    this.roadMeshes = [];
+    this.roadsData = [];          // { start: {x,z}, end: {x,z} }
 
-    for (let i = -25; i < 25; i += 3) {
-      const lineGeo = new THREE.BoxGeometry(1, 0.05, 0.2);
-      const lineMat = new THREE.MeshStandardMaterial({ color: 0xFFC107 });
-      const line = new THREE.Mesh(lineGeo, lineMat);
-      line.position.set(i, 0.02, 0);
-      line.receiveShadow = true;
-      this.scene.add(line);
-    }
-
+    // Buildings & trees
     this.buildingGroups = [];
+    this.trees = [];
+
+    // Avatar
+    this.avatar = null;
+    this.avatarPath = [];         // points for walking
+    this.avatarSpeed = 0.02;
+
+    // Animation loop
     this.animationId = null;
     this.animate();
+
+    // ---- Create Build Mode Toggle Button (inside container) ----
+    this.createBuildModeButton();
   }
 
-  updateFromData(city) {
+  createBuildModeButton() {
+    const btn = document.createElement('button');
+    btn.textContent = '🛠️ Build Mode';
+    btn.style.position = 'absolute';
+    btn.style.top = '10px';
+    btn.style.right = '10px';
+    btn.style.zIndex = '10';
+    btn.style.background = '#d4af37';
+    btn.style.border = 'none';
+    btn.style.padding = '0.5rem 1rem';
+    btn.style.borderRadius = '2rem';
+    btn.style.fontWeight = 'bold';
+    btn.style.cursor = 'pointer';
+    btn.addEventListener('click', () => {
+      this.buildMode = !this.buildMode;
+      btn.textContent = this.buildMode ? '🛠️ Move Buildings' : '🛠️ Build Mode';
+      // Enable/disable drag controls
+      if (this.dragControls) {
+        this.dragControls.enabled = this.buildMode;
+      }
+      // Disable orbit controls when in build mode (so we can drag)
+      this.orbitControls.enabled = !this.buildMode;
+    });
+    // Make container position relative
+    this.container.style.position = 'relative';
+    this.container.appendChild(btn);
+  }
+
+  // ---- Day/Night cycle ----
+  updateDayNight(delta) {
+    this.timeOfDay += delta;
+    if (this.timeOfDay > this.dayDuration) this.timeOfDay -= this.dayDuration;
+    const progress = this.timeOfDay / this.dayDuration; // 0..1
+
+    // Sun position: circle in the sky
+    const angle = progress * Math.PI * 2;
+    const sunHeight = Math.sin(angle) * 40;
+    const sunX = Math.cos(angle) * 40;
+    this.sunLight.position.set(sunX, sunHeight, 20);
+    this.sunLight.intensity = Math.max(0.2, Math.sin(angle) * 1.2);
+
+    // Sky color
+    const dayColor = new THREE.Color(0x87CEEB);
+    const nightColor = new THREE.Color(0x0a0a2e);
+    const mix = (Math.sin(angle) + 1) / 2; // 0 at night, 1 at day
+    this.scene.background = dayColor.clone().lerp(nightColor, 1 - mix);
+
+    // Ambient light
+    this.ambientLight.intensity = 0.2 + mix * 0.6;
+
+    // Street lights & building windows emissive
+    const isNight = mix < 0.3;
+    if (isNight !== this.isNight) {
+      this.isNight = isNight;
+      this.toggleNightLights(isNight);
+    }
+  }
+
+  toggleNightLights(on) {
+    // Street lights
+    this.streetLights.forEach(light => {
+      light.intensity = on ? 0.8 : 0;
+    });
+    // Building windows emissive
+    this.buildingGroups.forEach(group => {
+      group.children.forEach(child => {
+        if (child.material && child.material.emissive) {
+          child.material.emissiveIntensity = on ? 0.8 : 0.1;
+        }
+      });
+    });
+  }
+
+  // ---- Data loading ----
+  updateFromData(cityData, roads, avatarAppearance) {
+    // Remove old buildings
     this.buildingGroups.forEach(group => this.scene.remove(group));
     this.buildingGroups = [];
 
+    // Build new buildings (parks, libraries, offices, galleries)
     const types = {
       park: (x, z) => this.createPark(x, z),
       library: (x, z) => this.createLibrary(x, z),
@@ -80,97 +175,113 @@ class ThreeCity {
       gallery: (x, z) => this.createGallery(x, z)
     };
 
-    Object.entries(city).forEach(([type, count]) => {
+    Object.entries(cityData).forEach(([type, count]) => {
       for (let i = 0; i < count; i++) {
-        const x = (Math.random() - 0.5) * 40;
-        const z = (Math.random() - 0.5) * 40;
+        const x = (Math.random() - 0.5) * 50;
+        const z = (Math.random() - 0.5) * 50;
         if (types[type]) {
           const group = types[type](x, z);
-          if (group) {
-            this.scene.add(group);
-            this.buildingGroups.push(group);
-          }
+          group.userData = { type, id: `${type}_${i}_${Date.now()}`, position: { x, z } };
+          this.scene.add(group);
+          this.buildingGroups.push(group);
         }
       }
     });
+
+    // Roads
+    this.roadsData = roads || [];
+    this.drawRoads();
+
+    // Avatar
+    this.createAvatar(avatarAppearance);
+
+    // Rebuild drag controls for new buildings
+    this.setupDragControls();
   }
 
+  // ---- Building types (enhanced with more details) ----
   createPark(x, z) {
     const group = new THREE.Group();
-    const grassGeo = new THREE.BoxGeometry(3, 0.2, 3);
+    const grassGeo = new THREE.BoxGeometry(4, 0.1, 4);
     const grassMat = new THREE.MeshStandardMaterial({ color: 0x4CAF50 });
     const grass = new THREE.Mesh(grassGeo, grassMat);
-    grass.position.set(x, 0.1, z);
+    grass.position.set(0, 0.05, 0);
     grass.receiveShadow = true;
     grass.castShadow = true;
     group.add(grass);
 
-    for (let i = 0; i < 2; i++) {
+    // Trees
+    for (let i = 0; i < 3; i++) {
       const treeGroup = new THREE.Group();
-      const trunkGeo = new THREE.CylinderGeometry(0.2, 0.25, 1.5, 8);
-      const trunkMat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
-      const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-      trunk.position.y = 0.75;
+      const trunk = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.2, 0.3, 1.8, 6),
+        new THREE.MeshStandardMaterial({ color: 0x8B4513 })
+      );
+      trunk.position.y = 0.9;
       trunk.castShadow = true;
       trunk.receiveShadow = true;
       treeGroup.add(trunk);
-
-      const leafPositions = [1.2, 1.6, 2.0];
-      leafPositions.forEach((y, idx) => {
-        const leafGeo = new THREE.ConeGeometry(0.6 - idx * 0.1, 0.6, 8);
-        const leafMat = new THREE.MeshStandardMaterial({ color: 0x2E7D32 });
-        const leaf = new THREE.Mesh(leafGeo, leafMat);
-        leaf.position.y = y;
+      for (let j = 0; j < 3; j++) {
+        const leaf = new THREE.Mesh(
+          new THREE.ConeGeometry(0.6 - j * 0.15, 0.6, 8),
+          new THREE.MeshStandardMaterial({ color: 0x2E7D32 })
+        );
+        leaf.position.y = 1.2 + j * 0.5;
         leaf.castShadow = true;
         leaf.receiveShadow = true;
         treeGroup.add(leaf);
-      });
-
-      treeGroup.position.set(x - 0.8 + i * 1.6, 0.1, z - 0.8 + i * 1.6);
+      }
+      treeGroup.position.set(-1.2 + i * 1.2, 0.1, -1.2 + i * 1.2);
       group.add(treeGroup);
     }
+    group.position.set(x, 0, z);
     return group;
   }
 
   createLibrary(x, z) {
     const group = new THREE.Group();
-    const bodyGeo = new THREE.BoxGeometry(3, 3, 2.5);
-    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.6 });
-    const body = new THREE.Mesh(bodyGeo, bodyMat);
-    body.position.set(x, 1.5, z);
+    const body = new THREE.Mesh(
+      new THREE.BoxGeometry(3.5, 4, 3),
+      new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.5 })
+    );
+    body.position.y = 2;
     body.castShadow = true;
     body.receiveShadow = true;
     group.add(body);
 
-    const roofGeo = new THREE.ConeGeometry(2.5, 1.2, 4);
-    const roofMat = new THREE.MeshStandardMaterial({ color: 0x5D4037 });
-    const roof = new THREE.Mesh(roofGeo, roofMat);
-    roof.position.set(x, 3.6, z);
+    const roof = new THREE.Mesh(
+      new THREE.ConeGeometry(2.8, 1.5, 4),
+      new THREE.MeshStandardMaterial({ color: 0x5D4037 })
+    );
+    roof.position.y = 4.75;
     roof.rotation.y = Math.PI / 4;
     roof.castShadow = true;
     roof.receiveShadow = true;
     group.add(roof);
 
+    // Windows (glowing at night)
     for (let row = 0; row < 2; row++) {
       for (let col = 0; col < 3; col++) {
-        const winGeo = new THREE.BoxGeometry(0.4, 0.6, 0.1);
-        const winMat = new THREE.MeshStandardMaterial({ color: 0xFFE082, emissive: 0xFFD54F, emissiveIntensity: 0.5 });
-        const win = new THREE.Mesh(winGeo, winMat);
-        win.position.set(x - 1 + col * 1, 1.5 + row * 1.2, z + 1.26);
-        win.castShadow = true;
+        const win = new THREE.Mesh(
+          new THREE.BoxGeometry(0.5, 0.8, 0.05),
+          new THREE.MeshStandardMaterial({ color: 0xFFE082, emissive: 0xFFD54F, emissiveIntensity: 0.2 })
+        );
+        win.position.set(-1.2 + col * 1.2, 1.5 + row * 1.5, 1.51);
         group.add(win);
       }
     }
+    group.position.set(x, 0, z);
     return group;
   }
 
   createOffice(x, z) {
     const group = new THREE.Group();
-    const height = 5 + Math.random() * 3;
-    const bodyGeo = new THREE.BoxGeometry(2.5, height, 2.5);
-    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x607D8B, roughness: 0.4, metalness: 0.7 });
-    const body = new THREE.Mesh(bodyGeo, bodyMat);
-    body.position.set(x, height / 2, z);
+    const height = 6 + Math.random() * 4;
+    const body = new THREE.Mesh(
+      new THREE.BoxGeometry(3, height, 3),
+      new THREE.MeshStandardMaterial({ color: 0x607D8B, roughness: 0.3, metalness: 0.6 })
+    );
+    body.position.y = height / 2;
     body.castShadow = true;
     body.receiveShadow = true;
     group.add(body);
@@ -178,55 +289,229 @@ class ThreeCity {
     const floors = Math.floor(height / 1.2);
     for (let f = 0; f < floors; f++) {
       for (let side = 0; side < 4; side++) {
-        const winGeo = new THREE.BoxGeometry(0.5, 0.8, 0.05);
-        const winMat = new THREE.MeshStandardMaterial({ color: 0xFFE082, emissive: 0xFFC107, emissiveIntensity: 0.4 });
-        const win = new THREE.Mesh(winGeo, winMat);
+        const win = new THREE.Mesh(
+          new THREE.BoxGeometry(0.6, 0.9, 0.05),
+          new THREE.MeshStandardMaterial({ color: 0xFFE082, emissive: 0xFFC107, emissiveIntensity: 0.2 })
+        );
         const angle = (side * Math.PI) / 2;
         win.position.set(
-          x + Math.sin(angle) * 1.26,
+          Math.sin(angle) * 1.51,
           0.8 + f * 1.2,
-          z + Math.cos(angle) * 1.26
+          Math.cos(angle) * 1.51
         );
         win.rotation.y = angle;
-        win.castShadow = true;
         group.add(win);
       }
     }
+    group.position.set(x, 0, z);
     return group;
   }
 
   createGallery(x, z) {
     const group = new THREE.Group();
-    const bodyGeo = new THREE.BoxGeometry(3.5, 2.5, 3);
-    const bodyMat = new THREE.MeshStandardMaterial({ color: 0xE91E63, roughness: 0.5 });
-    const body = new THREE.Mesh(bodyGeo, bodyMat);
-    body.position.set(x, 1.25, z);
+    const body = new THREE.Mesh(
+      new THREE.BoxGeometry(4, 3, 3.5),
+      new THREE.MeshStandardMaterial({ color: 0xE91E63, roughness: 0.4 })
+    );
+    body.position.y = 1.5;
     body.castShadow = true;
     body.receiveShadow = true;
     group.add(body);
 
-    const domeGeo = new THREE.SphereGeometry(2, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2);
-    const domeMat = new THREE.MeshStandardMaterial({ color: 0xAD1457, roughness: 0.3 });
-    const dome = new THREE.Mesh(domeGeo, domeMat);
-    dome.position.set(x, 2.5, z);
+    const dome = new THREE.Mesh(
+      new THREE.SphereGeometry(2.2, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2),
+      new THREE.MeshStandardMaterial({ color: 0xAD1457, roughness: 0.2, metalness: 0.3 })
+    );
+    dome.position.y = 3;
     dome.castShadow = true;
     dome.receiveShadow = true;
     group.add(dome);
 
     for (let i = 0; i < 4; i++) {
-      const winGeo = new THREE.BoxGeometry(0.6, 0.8, 0.1);
-      const winMat = new THREE.MeshStandardMaterial({ color: 0xFFE082, emissive: 0xFFD54F, emissiveIntensity: 0.5 });
-      const win = new THREE.Mesh(winGeo, winMat);
-      win.position.set(x - 1.2 + i * 0.8, 1.5, z + 1.51);
+      const win = new THREE.Mesh(
+        new THREE.BoxGeometry(0.7, 1, 0.05),
+        new THREE.MeshStandardMaterial({ color: 0xFFE082, emissive: 0xFFD54F, emissiveIntensity: 0.2 })
+      );
+      win.position.set(-1.4 + i * 0.9, 1.8, 1.76);
       group.add(win);
     }
+    group.position.set(x, 0, z);
     return group;
   }
 
+  // ---- Roads ----
+  drawRoads() {
+    // Remove old roads
+    this.roadMeshes.forEach(mesh => this.scene.remove(mesh));
+    this.roadMeshes = [];
+
+    this.roadsData.forEach(seg => {
+      const start = new THREE.Vector3(seg.start.x, 0.01, seg.start.z);
+      const end = new THREE.Vector3(seg.end.x, 0.01, seg.end.z);
+      const direction = new THREE.Vector3().subVectors(end, start);
+      const length = direction.length();
+      const midPoint = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
+
+      const roadGeo = new THREE.PlaneGeometry(length, 1.5);
+      const roadMat = new THREE.MeshStandardMaterial({ color: 0x424242, roughness: 0.9 });
+      const road = new THREE.Mesh(roadGeo, roadMat);
+      road.position.copy(midPoint);
+      road.rotation.x = -Math.PI / 2;
+      road.rotation.z = Math.atan2(direction.z, direction.x);
+      road.receiveShadow = true;
+      this.scene.add(road);
+      this.roadMeshes.push(road);
+
+      // Dashed center line
+      const dashes = 10;
+      for (let i = 0; i < dashes; i++) {
+        const lineGeo = new THREE.BoxGeometry(1, 0.02, 0.1);
+        const lineMat = new THREE.MeshStandardMaterial({ color: 0xFFC107 });
+        const line = new THREE.Mesh(lineGeo, lineMat);
+        const t = (i + 0.5) / dashes;
+        line.position.copy(start.clone().lerp(end, t));
+        line.position.y = 0.03;
+        line.receiveShadow = true;
+        this.scene.add(line);
+        this.roadMeshes.push(line);
+      }
+    });
+
+    // Place street lights along roads
+    this.streetLights.forEach(light => this.scene.remove(light));
+    this.streetLights = [];
+    this.roadsData.forEach(seg => {
+      const start = new THREE.Vector3(seg.start.x, 0.01, seg.start.z);
+      const end = new THREE.Vector3(seg.end.x, 0.01, seg.end.z);
+      const length = start.distanceTo(end);
+      const numLights = Math.floor(length / 5);
+      for (let i = 0; i < numLights; i++) {
+        const t = i / numLights;
+        const pos = start.clone().lerp(end, t);
+        const light = new THREE.PointLight(0xFFD54F, 0, 10);
+        light.position.set(pos.x, 2.5, pos.z);
+        this.scene.add(light);
+        this.streetLights.push(light);
+
+        const pole = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.1, 0.15, 2.5, 6),
+          new THREE.MeshStandardMaterial({ color: 0x333333 })
+        );
+        pole.position.copy(light.position);
+        pole.position.y = 1.25;
+        pole.castShadow = true;
+        pole.receiveShadow = true;
+        this.scene.add(pole);
+        this.roadMeshes.push(pole);
+      }
+    });
+  }
+
+  // ---- Avatar ----
+  createAvatar(appearance = {}) {
+    if (this.avatar) {
+      this.scene.remove(this.avatar);
+    }
+    const group = new THREE.Group();
+
+    // Body
+    const bodyGeo = new THREE.CylinderGeometry(0.3, 0.4, 1.2, 6);
+    const bodyMat = new THREE.MeshStandardMaterial({ color: appearance.bodyColor || 0x2196F3 });
+    const body = new THREE.Mesh(bodyGeo, bodyMat);
+    body.position.y = 0.6;
+    body.castShadow = true;
+    group.add(body);
+
+    // Head
+    const headGeo = new THREE.SphereGeometry(0.3, 8, 8);
+    const headMat = new THREE.MeshStandardMaterial({ color: 0xFFD93D });
+    const head = new THREE.Mesh(headGeo, headMat);
+    head.position.y = 1.4;
+    head.castShadow = true;
+    group.add(head);
+
+    // Hat (if learning habits)
+    if (appearance.hat) {
+      const hatGeo = new THREE.ConeGeometry(0.3, 0.4, 6);
+      const hatMat = new THREE.MeshStandardMaterial({ color: 0x000000 });
+      const hat = new THREE.Mesh(hatGeo, hatMat);
+      hat.position.y = 1.7;
+      group.add(hat);
+    }
+
+    // Arms, legs (simple cylinders)
+    // ... (omitted for brevity – you can expand)
+
+    group.position.set(0, 0, 0);
+    this.scene.add(group);
+    this.avatar = group;
+
+    // Generate a walking path along roads
+    this.generateAvatarPath();
+  }
+
+  generateAvatarPath() {
+    // Simple: follow first road segment back and forth
+    if (this.roadsData.length > 0) {
+      const seg = this.roadsData[0];
+      this.avatarPath = [
+        new THREE.Vector3(seg.start.x, 0, seg.start.z),
+        new THREE.Vector3(seg.end.x, 0, seg.end.z)
+      ];
+    } else {
+      this.avatarPath = [new THREE.Vector3(0, 0, 0), new THREE.Vector3(5, 0, 5)];
+    }
+  }
+
+  updateAvatar(delta) {
+    if (!this.avatar || this.avatarPath.length < 2) return;
+    const pos = this.avatar.position;
+    const target = this.avatarPath[1];
+    const direction = new THREE.Vector3().subVectors(target, pos);
+    if (direction.length() < 0.1) {
+      // Swap path
+      this.avatarPath.reverse();
+    }
+    direction.normalize();
+    pos.add(direction.multiplyScalar(this.avatarSpeed * delta * 30));
+    this.avatar.position.copy(pos);
+  }
+
+  // ---- Drag controls ----
+  setupDragControls() {
+    if (this.dragControls) {
+      this.dragControls.dispose();
+    }
+    // DragControls needs the objects array
+    const objects = this.buildingGroups.filter(g => g.userData.type !== 'park'); // don't move parks?
+    this.dragControls = new THREE.DragControls(objects, this.camera, this.renderer.domElement);
+    this.dragControls.enabled = this.buildMode;
+
+    this.dragControls.addEventListener('dragstart', () => {
+      this.orbitControls.enabled = false;
+    });
+    this.dragControls.addEventListener('dragend', (event) => {
+      this.orbitControls.enabled = !this.buildMode;
+      // Save new position to Firebase
+      const group = event.object;
+      const id = group.userData.id;
+      const newPos = { x: group.position.x, z: group.position.z };
+      // We'll call an external function (defined in script.js) to update Firestore
+      if (window.onBuildingMoved) {
+        window.onBuildingMoved(id, newPos);
+      }
+    });
+  }
+
+  // ---- Animation loop ----
   animate() {
-    this.animationId = requestAnimationFrame(() => this.animate());
-    this.controls.update();
+    const delta = this.clock.getDelta();
+    this.updateDayNight(delta);
+    this.updateAvatar(delta);
+
+    this.orbitControls.update();
     this.renderer.render(this.scene, this.camera);
+    this.animationId = requestAnimationFrame(() => this.animate());
   }
 
   destroy() {
@@ -236,9 +521,10 @@ class ThreeCity {
   }
 }
 
+// ---- City loader (called from script.js) ----
 async function renderCity() {
   const container = document.getElementById('three-container');
-  if (!container || !userDocRef) return;
+  if (!container || !window.userDocRef) return;
 
   if (!threeCity) {
     threeCity = new ThreeCity(container);
@@ -252,13 +538,29 @@ async function renderCity() {
     });
   }
 
-  const doc = await userDocRef.get();
-  const city = doc.data()?.cityBuildings || { park: 0, library: 0, office: 0, gallery: 0 };
+  const doc = await window.userDocRef.get();
+  const data = doc.data() || {};
+  const cityBuildings = data.cityBuildings || { park: 0, library: 0, office: 0, gallery: 0 };
+  const roads = data.roads || [];
+  // Avatar appearance based on habits
+  const habits = window.habits || [];
+  const learningCount = habits.filter(h => h.category === 'learning').length;
+  const healthCount = habits.filter(h => h.category === 'health').length;
+  const avatarAppearance = {
+    hat: learningCount >= 3,
+    bodyColor: healthCount >= 3 ? 0xFF5722 : 0x2196F3
+  };
 
-  if (window.parkCount) parkCount.textContent = city.park || 0;
-  if (window.libraryCount) libraryCount.textContent = city.library || 0;
-  if (window.officeCount) officeCount.textContent = city.office || 0;
-  if (window.galleryCount) galleryCount.textContent = city.gallery || 0;
+  // Update UI counters
+  if (window.parkCount) window.parkCount.textContent = cityBuildings.park || 0;
+  if (window.libraryCount) window.libraryCount.textContent = cityBuildings.library || 0;
+  if (window.officeCount) window.officeCount.textContent = cityBuildings.office || 0;
+  if (window.galleryCount) window.galleryCount.textContent = cityBuildings.gallery || 0;
 
-  threeCity.updateFromData(city);
+  threeCity.updateFromData(cityBuildings, roads, avatarAppearance);
 }
+
+// Expose a global function for building position updates
+window.onBuildingMoved = async (buildingId, newPos) => {
+  // We'll implement the actual Firestore update in script.js (see next section)
+};
