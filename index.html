@@ -34,142 +34,95 @@
     <button class="btn btn-primary" id="registerBtn">Sign Up</button>
     <button class="btn btn-outline" id="backToLoginBtn">← Back to login</button>
   </div>
-<!-- MAIN APP DASHBOARD -->
-<div id="mainAppScreen" class="screen">
-  <!-- Daily Goal Bar -->
-  <div style="flex-shrink:0; margin-bottom:0.5rem;">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.2rem;">
-      <span id="dailyGoalText" style="font-weight:600;">Today's Progress</span>
-      <span id="dailyGoalPercent" style="font-size:0.85rem; color:var(--text-secondary);">0%</span>
-    </div>
-    <div class="progress-bar" id="dailyGoalBar">
-      <div class="progress-fill" id="dailyGoalFill" style="width:0%;"></div>
-    </div>
-  </div>
 
-  <div style="display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
-    <h2 id="userGreeting">👋</h2>
-    <button id="logoutMainBtn" class="btn" style="width:auto; padding:0.5rem 1rem;"><i class="fas fa-sign-out-alt"></i></button>
-  </div>
-  <div class="card" id="mentorMessage" style="font-size:0.9rem; margin-bottom:0.5rem; flex-shrink:0;"></div>
-
-  <!-- Avatar Showcase (small) -->
-  <div id="avatarShowcase" class="card" style="display:flex; align-items:center; gap:1rem; padding:0.8rem 1.2rem; margin-bottom:0.5rem; flex-shrink:0;">
-    <div id="avatarIcon" style="font-size:2.5rem;">🙂</div>
-    <div style="flex:1;">
-      <div style="font-weight:bold;" id="avatarShowcaseName">Beginner</div>
-      <div style="font-size:0.8rem; color:var(--text-secondary);">
-        💪<span id="avatarStrength">0</span> 🧠<span id="avatarKnowledge">0</span> ⚡<span id="avatarFocus">0</span> 🎨<span id="avatarCreativity">0</span>
+  <!-- MAIN APP DASHBOARD -->
+  <div id="mainAppScreen" class="screen">
+    <!-- Daily Goal Bar -->
+    <div style="flex-shrink:0; margin-bottom:0.5rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.2rem;">
+        <span id="dailyGoalText" style="font-weight:600;">Today's Progress</span>
+        <span id="dailyGoalPercent" style="font-size:0.85rem; color:var(--text-secondary);">0%</span>
+      </div>
+      <div class="progress-bar" id="dailyGoalBar">
+        <div class="progress-fill" id="dailyGoalFill" style="width:0%;"></div>
       </div>
     </div>
-    <div style="font-size:0.9rem; font-weight:bold; color:var(--accent);">Lv.<span id="avatarLevel">1</span></div>
-  </div>
 
-  <!-- Stats Pills -->
-  <div class="stats-row" style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.5rem; flex-shrink:0;">
-    <div class="stat-pill"><span>🎯</span> <span id="totalHabits">0</span></div>
-    <div class="stat-pill"><span>🔥</span> <span id="currentStreak">0</span> <span style="font-size:0.7rem;">streak</span></div>
-    <div class="stat-pill"><span>💎</span> <span id="userXP">0</span> <span style="font-size:0.7rem;">XP</span></div>
-    <div class="stat-pill"><span>🪙</span> <span id="mintCoins">0</span> <span style="font-size:0.7rem;">coins</span></div>
-    <div class="stat-pill"><span>🔒</span> <span id="mintTokens">0</span> <span style="font-size:0.7rem;">tokens</span></div>
-  </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
+      <h2 id="userGreeting">👋</h2>
+      <button id="logoutMainBtn" class="btn" style="width:auto; padding:0.5rem 1rem;"><i class="fas fa-sign-out-alt"></i></button>
+    </div>
+    <div class="card" id="mentorMessage" style="font-size:0.9rem; margin-bottom:0.5rem; flex-shrink:0;"></div>
 
-  <div class="tabs" style="flex-shrink:0;">
-    <div class="tab active" id="tabMorning">🌅 Morning</div>
-    <div class="tab" id="tabEvening">🌙 Evening</div>
-  </div>
-  <select id="chapterFilter" style="margin-bottom:0.5rem; flex-shrink:0;">
-    <option value="">All Chapters</option>
-  </select>
-  <div id="habitListContainer" style="flex:1; overflow-y:auto; min-height:0;"></div>
-  <div id="habitInsight" class="card" style="font-size:0.85rem; display:none; flex-shrink:0;"></div>
+    <!-- Avatar Showcase -->
+    <div id="avatarShowcase" class="card" style="display:flex; align-items:center; gap:1rem; padding:0.8rem 1.2rem; margin-bottom:0.5rem; flex-shrink:0;">
+      <div id="avatarIcon" style="font-size:2.5rem;">🙂</div>
+      <div style="flex:1;">
+        <div style="font-weight:bold;" id="avatarShowcaseName">Beginner</div>
+        <div style="font-size:0.8rem; color:var(--text-secondary);">
+          💪<span id="avatarStrength">0</span> 🧠<span id="avatarKnowledge">0</span> ⚡<span id="avatarFocus">0</span> 🎨<span id="avatarCreativity">0</span>
+        </div>
+      </div>
+      <div style="font-size:0.9rem; font-weight:bold; color:var(--accent);">Lv.<span id="avatarLevel">1</span></div>
+    </div>
 
-  <!-- Floating Add Button -->
-  <button id="addHabitFAB" class="fab-btn">+</button>
+    <!-- Stats Pills -->
+    <div class="stats-row" style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.5rem; flex-shrink:0;">
+      <div class="stat-pill"><span>🎯</span> <span id="totalHabits">0</span></div>
+      <div class="stat-pill"><span>🔥</span> <span id="currentStreak">0</span> <span style="font-size:0.7rem;">streak</span></div>
+      <div class="stat-pill"><span>💎</span> <span id="userXP">0</span> <span style="font-size:0.7rem;">XP</span></div>
+      <div class="stat-pill"><span>🪙</span> <span id="mintCoins">0</span> <span style="font-size:0.7rem;">coins</span></div>
+      <div class="stat-pill"><span>🔒</span> <span id="mintTokens">0</span> <span style="font-size:0.7rem;">tokens</span></div>
+    </div>
 
-  <!-- Bottom Navigation (5 tabs) -->
-  <div class="bottom-nav" style="flex-shrink:0;">
-    <button id="navDashboard" class="active"><i class="fas fa-home"></i><span>Home</span></button>
-    <button id="navAvatar"><i class="fas fa-user"></i><span>Avatar</span></button>
-    <button id="navBoss"><i class="fas fa-skull"></i><span>Boss</span></button>
-    <button id="navProgress"><i class="fas fa-chart-line"></i><span>Progress</span></button>
-    <button id="navSettings"><i class="fas fa-cog"></i><span>Settings</span></button>
-  </div>
-</div>
+    <div class="tabs" style="flex-shrink:0;">
+      <div class="tab active" id="tabMorning">🌅 Morning</div>
+      <div class="tab" id="tabEvening">🌙 Evening</div>
+    </div>
+    <select id="chapterFilter" style="margin-bottom:0.5rem; flex-shrink:0;">
+      <option value="">All Chapters</option>
+    </select>
+    <div id="habitListContainer" style="flex:1; overflow-y:auto; min-height:0;"></div>
+    <div id="habitInsight" class="card" style="font-size:0.85rem; display:none; flex-shrink:0;"></div>
 
-<!-- AVATAR SCREEN -->
-<div id="avatarScreen" class="screen">
-  <h2>👤 Your Avatar</h2>
-  <div class="card" style="text-align:center;">
-    <div id="avatarLargeIcon" style="font-size:5rem;">🙂</div>
-    <div style="font-size:1.5rem; font-weight:bold;" id="avatarStageName">Beginner</div>
-    <div style="color:var(--accent); font-weight:bold;">Level <span id="avatarScreenLevel">1</span></div>
-    <div style="margin-top:0.5rem;">XP: <span id="avatarXP">0</span> / 100</div>
-    <div class="progress-bar" style="margin:0.5rem 0;"><div class="progress-fill" id="avatarLevelBar" style="width:0%;"></div></div>
-  </div>
+    <!-- Floating Add Button -->
+    <button id="addHabitFAB" class="fab-btn">+</button>
 
-  <!-- Stats -->
-  <div class="card">
-    <h4>📊 Stats</h4>
-    <div>💪 Strength: <span id="avatarStatStrength">0</span></div>
-    <div>🧠 Knowledge: <span id="avatarStatKnowledge">0</span></div>
-    <div>⚡ Focus: <span id="avatarStatFocus">0</span></div>
-    <div>🎨 Creativity: <span id="avatarStatCreativity">0</span></div>
-  </div>
-
-  <!-- Cosmetics Shop (on avatar page) -->
-  <div class="card">
-    <h4>🛍️ Cosmetics</h4>
-    <div id="cosmeticsShop"></div>
-  </div>
-
-  <button class="btn" id="backFromAvatar">← Home</button>
-</div>
-
-
-
-    <!-- More Menu (hidden) -->
-    <div id="moreMenu" style="position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:var(--bg-card); border-radius:1.5rem; padding:1rem; display:none; flex-wrap:wrap; gap:0.8rem; z-index:60; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
-      <button id="moreDNA" class="btn btn-small" style="width:auto;">🧬 DNA</button>
-      <button id="moreMessages" class="btn btn-small" style="width:auto;">✉️ Messages</button>
-      <button id="moreBoss" class="btn btn-small" style="width:auto;">⚔️ Boss</button>
-      <button id="moreChapters" class="btn btn-small" style="width:auto;">📖 Chapters</button>
-      <button id="moreImpact" class="btn btn-small" style="width:auto;">🌍 Impact</button>
-      <button id="moreAchievements" class="btn btn-small" style="width:auto;">🏆 Achievements</button>
-      <button id="moreLeaderboard" class="btn btn-small" style="width:auto;">🏅 Leaderboard</button>
-      <button id="moreSettings" class="btn btn-small" style="width:auto;">⚙️ Settings</button>
+    <!-- Bottom Navigation (5 tabs) -->
+    <div class="bottom-nav" style="flex-shrink:0;">
+      <button id="navDashboard" class="active"><i class="fas fa-home"></i><span>Home</span></button>
+      <button id="navAvatar"><i class="fas fa-user"></i><span>Avatar</span></button>
+      <button id="navBoss"><i class="fas fa-skull"></i><span>Boss</span></button>
+      <button id="navProgress"><i class="fas fa-chart-line"></i><span>Progress</span></button>
+      <button id="navSettings"><i class="fas fa-cog"></i><span>Settings</span></button>
     </div>
   </div>
 
-  <!-- HABIT DNA -->
-  <div id="dnaScreen" class="screen">
-    <h2>🧬 Habit DNA</h2>
-    <div id="dnaBars"></div>
-    <button class="btn" id="backFromDNA">← Back</button>
-  </div>
-
-  <!-- CITY BUILDER (3D) -->
-  <div id="cityScreen" class="screen">
-    <h2>🏙️ My 3D City</h2>
-    <div class="card" style="display:flex; justify-content:space-around; text-align:center;">
-      <div><div style="font-size:1.5rem;">🌳</div><div><span id="parkCount">0</span> Parks</div></div>
-      <div><div style="font-size:1.5rem;">📚</div><div><span id="libraryCount">0</span> Libraries</div></div>
-      <div><div style="font-size:1.5rem;">🏢</div><div><span id="officeCount">0</span> Offices</div></div>
-      <div><div style="font-size:1.5rem;">🎨</div><div><span id="galleryCount">0</span> Galleries</div></div>
+  <!-- AVATAR SCREEN (with canvas) -->
+  <div id="avatarScreen" class="screen">
+    <h2>👤 Your Avatar</h2>
+    <div class="card" style="text-align:center;">
+      <canvas id="avatarCanvas" width="200" height="250" style="display:block; margin:0 auto;"></canvas>
+      <div style="font-size:1.5rem; font-weight:bold;" id="avatarStageName">Beginner</div>
+      <div style="color:var(--accent); font-weight:bold;">Level <span id="avatarScreenLevel">1</span></div>
+      <div style="margin-top:0.5rem;">XP: <span id="avatarXP">0</span> / 100</div>
+      <div class="progress-bar" style="margin:0.5rem 0;"><div class="progress-fill" id="avatarLevelBar" style="width:0%;"></div></div>
     </div>
-    <div id="three-container" style="width:100%; height:400px; border-radius:1rem; overflow:hidden; margin:1rem 0; background:#87CEEB;"></div>
-    <p style="text-align:center; color: var(--text-secondary); font-style: italic;">
-      Drag to rotate • Pinch to zoom • Complete habits to grow! 🌆
-    </p>
-    <button class="btn" id="backFromCity">← Back</button>
-  </div>
 
-  <!-- FUTURE SELF MESSAGES -->
-  <div id="messagesScreen" class="screen">
-    <h2>✉️ Future Self</h2>
-    <button class="btn btn-primary" id="newMessageBtn">Write a Message</button>
-    <div id="messagesList" style="margin-top:1rem;"></div>
-    <button class="btn" id="backFromMessages">← Back</button>
+    <div class="card">
+      <h4>📊 Stats</h4>
+      <div>💪 Strength: <span id="avatarStatStrength">0</span></div>
+      <div>🧠 Knowledge: <span id="avatarStatKnowledge">0</span></div>
+      <div>⚡ Focus: <span id="avatarStatFocus">0</span></div>
+      <div>🎨 Creativity: <span id="avatarStatCreativity">0</span></div>
+    </div>
+
+    <div class="card">
+      <h4>🛍️ Cosmetics</h4>
+      <div id="cosmeticsShop"></div>
+    </div>
+
+    <button class="btn" id="backFromAvatar">← Home</button>
   </div>
 
   <!-- BOSS BATTLES -->
@@ -177,39 +130,17 @@
     <h2>⚔️ Boss Battles</h2>
     <button class="btn btn-primary" id="startBossBtn">Start New Challenge</button>
     <div id="activeBosses"></div>
-    <button class="btn" id="backFromBoss">← Back</button>
+    <button class="btn" id="backFromBoss">← Home</button>
   </div>
 
-  <!-- LIFE CHAPTERS -->
-  <div id="chaptersScreen" class="screen">
-    <h2>📖 Life Chapters</h2>
-    <button class="btn btn-primary" id="newChapterBtn">Create Chapter</button>
-    <div id="chaptersList"></div>
-    <button class="btn" id="backFromChapters">← Back</button>
-  </div>
-
-  <!-- WORLD IMPACT -->
-  <div id="impactScreen" class="screen">
-    <h2>🌍 World Impact</h2>
-    <div id="impactStats"></div>
-    <button class="btn" id="backFromImpact">← Back</button>
-  </div>
-
-  <!-- ACHIEVEMENTS -->
+  <!-- ACHIEVEMENTS (Progress) -->
   <div id="achievementsScreen" class="screen">
     <h2>🏆 Achievements</h2>
     <div id="achievementsList"></div>
-    <button class="btn" id="backFromAchievements">← Back</button>
+    <button class="btn" id="backFromAchievements">← Home</button>
   </div>
 
-  <!-- LEADERBOARD -->
-  <div id="leaderboardScreen" class="screen">
-    <h2>🏅 Leaderboard</h2>
-    <div id="leaderboardList"></div>
-    <button class="btn" id="backFromLeaderboard">← Back</button>
-  </div>
-
-  <!-- SETTINGS – includes referral code -->
+  <!-- SETTINGS (with links to all hidden screens) -->
   <div id="settingsView" class="screen">
     <h2>⚙️ Settings</h2>
     <div class="card">
@@ -240,6 +171,14 @@
         Invite friends! You both earn 20 🪙 when they join with your code.
       </p>
     </div>
+
+    <!-- Quick access to other screens -->
+    <button class="btn" id="openDNABtn">🧬 Habit DNA</button>
+    <button class="btn" id="openMessagesBtn">✉️ Future Messages</button>
+    <button class="btn" id="openChaptersBtn">📖 Life Chapters</button>
+    <button class="btn" id="openImpactBtn">🌍 World Impact</button>
+    <button class="btn" id="openLeaderboardBtn">🏅 Leaderboard</button>
+
     <button class="btn" id="howItWorksBtn">📖 How It Works</button>
     <button class="btn" id="openShopBtn">🛒 Mint Shop (All Items)</button>
     <button class="btn" id="shareProgressBtn"><i class="fas fa-share"></i> Share Progress</button>
@@ -250,7 +189,40 @@
     <button class="btn" id="backFromSettings">← Dashboard</button>
   </div>
 
-  <!-- HOW IT WORKS MODAL -->
+  <!-- HIDDEN SCREENS (accessible from Settings) -->
+  <div id="dnaScreen" class="screen">
+    <h2>🧬 Habit DNA</h2>
+    <div id="dnaBars"></div>
+    <button class="btn" id="backFromDNA">← Back</button>
+  </div>
+
+  <div id="messagesScreen" class="screen">
+    <h2>✉️ Future Self</h2>
+    <button class="btn btn-primary" id="newMessageBtn">Write a Message</button>
+    <div id="messagesList" style="margin-top:1rem;"></div>
+    <button class="btn" id="backFromMessages">← Back</button>
+  </div>
+
+  <div id="chaptersScreen" class="screen">
+    <h2>📖 Life Chapters</h2>
+    <button class="btn btn-primary" id="newChapterBtn">Create Chapter</button>
+    <div id="chaptersList"></div>
+    <button class="btn" id="backFromChapters">← Back</button>
+  </div>
+
+  <div id="impactScreen" class="screen">
+    <h2>🌍 World Impact</h2>
+    <div id="impactStats"></div>
+    <button class="btn" id="backFromImpact">← Back</button>
+  </div>
+
+  <div id="leaderboardScreen" class="screen">
+    <h2>🏅 Leaderboard</h2>
+    <div id="leaderboardList"></div>
+    <button class="btn" id="backFromLeaderboard">← Back</button>
+  </div>
+
+  <!-- MODALS (unchanged) -->
   <div id="howItWorksModal" class="modal">
     <div class="modal-content" style="max-width:500px; max-height:80vh;">
       <span class="close-modal" data-modal="howItWorksModal">&times;</span>
@@ -259,24 +231,23 @@
         <p><strong>🏠 Dashboard:</strong> View today's habits, streaks, XP, coins, and tokens. Switch between Morning/Evening routines.</p>
         <p><strong>➕ Adding Habits:</strong> Tap "+" to add a new habit with category, schedule, reminders, and more.</p>
         <p><strong>✅ Completing Habits:</strong> Tap "Done" on any habit. You earn +1 Mint Coin, +10 XP, and your streak increases. <em>After the day passes, only Streak Tokens can save missed days.</em></p>
-        <p><strong>🏙️ Virtual City:</strong> Each completed habit builds a real building in your city! Health→Parks, Learning→Libraries, Productivity→Offices, Creativity→Galleries, Infrastructure→Roads. Watch your city grow with a day/night cycle, street lights, and movable buildings.</p>
-        <p><strong>🛒 Mint Shop:</strong> Spend Mint Coins on 30 premium themes and XP packs. Earn coins by completing habits.</p>
+        <p><strong>👤 Avatar System:</strong> Your avatar grows with your habits! Health → Strength, Learning → Knowledge, Productivity → Focus, Creativity → Creativity. Level up, unlock new stages (Beginner to Legend), and buy cosmetics with Mint Coins.</p>
+        <p><strong>🛒 Mint Shop:</strong> Spend Mint Coins on 30 premium themes, XP packs, and avatar cosmetics. Earn coins by completing habits.</p>
         <p><strong>🛡️ Streak Insurance:</strong> Earn Streak Tokens every 7-day streak. Use 1 token to save a missed day.</p>
         <p><strong>⚔️ Boss Battles:</strong> Start a challenge. Each daily completion damages the boss. Missed days heal it. Defeat bosses for rewards!</p>
-        <p><strong>🧬 Habit DNA:</strong> See your habit breakdown by category - discover your identity percentages.</p>
+        <p><strong>🧬 Habit DNA:</strong> See your habit breakdown by category.</p>
         <p><strong>✉️ Future Messages:</strong> Write messages that unlock after conditions (30 days, 100-day streak, etc.).</p>
-        <p><strong>📖 Life Chapters:</strong> Organize habits into life phases (Exam Season, Fitness Journey, etc.).</p>
-        <p><strong>🌍 World Impact:</strong> Choose a cause - see how your habits create positive change.</p>
-        <p><strong>🏆 Achievements & Leaderboard:</strong> Earn badges for milestones. Top 2 leaderboard players every 30 days win 500 and 200 Mint Coins!</p>
-        <p><strong>🔗 Referral System:</strong> Share your unique code. When friends join with it, you both earn 20 Mint Coins!</p>
-        <p><strong>🔔 Notifications:</strong> Set reminder times for habits. App sends notifications even in background.</p>
+        <p><strong>📖 Life Chapters:</strong> Organize habits into life phases.</p>
+        <p><strong>🌍 World Impact:</strong> Choose a cause and see your simulated positive impact.</p>
+        <p><strong>🏆 Achievements & Leaderboard:</strong> Earn badges and compete for monthly coin rewards.</p>
+        <p><strong>🔗 Referral System:</strong> Share your unique code and both you and your friend earn 20 Mint Coins.</p>
+        <p><strong>🔔 Notifications:</strong> Set reminder times for habits.</p>
         <p><strong>🎨 Themes:</strong> Choose from 5 free themes or buy 30 premium ones in the Mint Shop.</p>
-        <p><strong>🪙 Economy:</strong> Complete habits → Earn Coins & XP → Level Up → Unlock Identity Levels (Beginner→Legend).</p>
+        <p><strong>🪙 Economy:</strong> Complete habits → Earn Coins & XP → Level Up → Unlock Avatar Stages.</p>
       </div>
     </div>
   </div>
 
-  <!-- HABIT FORM MODAL (updated with Infrastructure category) -->
   <div id="habitModal" class="modal">
     <div class="modal-content">
       <span class="close-modal" data-modal="habitModal">&times;</span>
@@ -287,7 +258,6 @@
         <option value="learning">Learning</option>
         <option value="productivity">Productivity</option>
         <option value="creativity">Creativity</option>
-        <option value="infrastructure">Infrastructure</option>
       </select>
       <select id="habitRepeat">
         <option value="daily">Daily</option>
@@ -315,7 +285,6 @@
     </div>
   </div>
 
-  <!-- MESSAGE COMPOSE MODAL -->
   <div id="messageModal" class="modal">
     <div class="modal-content">
       <span class="close-modal" data-modal="messageModal">&times;</span>
@@ -330,7 +299,6 @@
     </div>
   </div>
 
-  <!-- BOSS SETUP MODAL -->
   <div id="bossModal" class="modal">
     <div class="modal-content">
       <span class="close-modal" data-modal="bossModal">&times;</span>
@@ -341,7 +309,6 @@
     </div>
   </div>
 
-  <!-- CHAPTER MODAL -->
   <div id="chapterModal" class="modal">
     <div class="modal-content">
       <span class="close-modal" data-modal="chapterModal">&times;</span>
@@ -351,7 +318,6 @@
     </div>
   </div>
 
-  <!-- SHOP MODAL -->
   <div id="shopModal" class="modal">
     <div class="modal-content" style="max-width:450px; max-height:80vh;">
       <span class="close-modal" data-modal="shopModal">&times;</span>
@@ -370,7 +336,6 @@
     </div>
   </div>
 
-  <!-- PROGRESS REPLAY MODAL -->
   <div id="replayModal" class="modal">
     <div class="modal-content">
       <span class="close-modal" data-modal="replayModal">&times;</span>
@@ -379,7 +344,6 @@
     </div>
   </div>
 
-  <!-- PRIVACY MODAL -->
   <div id="privacyModal" class="modal">
     <div class="modal-content">
       <span class="close-modal" data-modal="privacyModal">&times;</span>
@@ -388,7 +352,6 @@
     </div>
   </div>
 
-  <!-- FAQ MODAL -->
   <div id="faqModal" class="modal">
     <div class="modal-content">
       <span class="close-modal" data-modal="faqModal">&times;</span>
@@ -409,15 +372,8 @@
 <!-- Our separated modules -->
 <script src="firebase.js"></script>
 <script src="shopData.js"></script>
+<script src="avatar.js"></script>
 <script src="utils.js"></script>
-
-<!-- Three.js for 3D city -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/DragControls.js"></script>
-<script src="city3d.js"></script>
-
-<!-- Main app logic -->
 <script src="script.js"></script>
 </body>
 </html>
