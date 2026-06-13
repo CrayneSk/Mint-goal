@@ -1,3 +1,4 @@
+```javascript
 // script.js – GoaLMint with Avatar System (no city)
 let currentUser = null, userDocRef = null, habits = [], currentRoutine = 'morning', editingHabitId = null;
 let lastCompletedHabitTime = null, lastCompletedHabitId = null;
@@ -94,6 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
     currentUser = user;
     if (user) {
       userDocRef = db.collection('users').doc(user.uid);
+      window.userDocRef = userDocRef;   // ✅ expose globally
       await loadUserData();
       showScreen(mainAppScreen);
       await loadHabits();
@@ -136,6 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
         referralCode
       };
       await db.collection('users').doc(uid).set(userData);
+      window.userDocRef = db.collection('users').doc(uid);   // ✅ expose globally
       await db.collection('referralCodes').doc(referralCode).set({ userId: uid });
       await db.collection('leaderboard').doc(uid).set({ username, xp: 0 });
 
@@ -305,7 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
     await userDocRef.update({ totalXP: xp, level, badges, mintCoins: newCoins, mintTokens: newTokens, identity: getIdentity(xp) });
     await db.collection('leaderboard').doc(currentUser.uid).set({ username: d.username, xp }, { merge: true });
 
-    // Increment avatar stat instead of city building
+    // Increment avatar stat
     if (h.category) {
       AvatarSystem.incrementStat(h.category);
     }
@@ -317,7 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (mintTokensEl) mintTokensEl.textContent = newTokens;
   }
 
-  // Habit form (unchanged)
+  // Habit form
   function openEditHabit(id) {
     const h = habits.find(x => x.id === id); if (!h) return;
     editingHabitId = id;
@@ -381,7 +384,7 @@ document.addEventListener('DOMContentLoaded', () => {
     await loadHabits(); renderDashboard();
   });
 
-  // Chapters (unchanged)
+  // Chapters
   async function populateChapterFilter() {
     if (!chapterFilter || !userDocRef) return;
     const snap = await userDocRef.collection('chapters').get();
@@ -397,7 +400,7 @@ document.addEventListener('DOMContentLoaded', () => {
     habitChapter.innerHTML = '<option value="">No Chapter</option>' + chapters.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
   }
 
-  // Render DNA etc.
+  // Render DNA
   function renderDNA() {
     if (!dnaBars) return;
     const cats = { Health: 0, Learning: 0, Productivity: 0, Creativity: 0 };
@@ -496,7 +499,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // MINT SHOP (unchanged)
+  // MINT SHOP
   async function renderShop() {
     if (!shopItems || !userDocRef) return;
     try {
@@ -705,3 +708,4 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }, 60000);
 });
+```
