@@ -34,57 +34,99 @@
     <button class="btn btn-primary" id="registerBtn">Sign Up</button>
     <button class="btn btn-outline" id="backToLoginBtn">← Back to login</button>
   </div>
+<!-- MAIN APP DASHBOARD -->
+<div id="mainAppScreen" class="screen">
+  <!-- Daily Goal Bar -->
+  <div style="flex-shrink:0; margin-bottom:0.5rem;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.2rem;">
+      <span id="dailyGoalText" style="font-weight:600;">Today's Progress</span>
+      <span id="dailyGoalPercent" style="font-size:0.85rem; color:var(--text-secondary);">0%</span>
+    </div>
+    <div class="progress-bar" id="dailyGoalBar">
+      <div class="progress-fill" id="dailyGoalFill" style="width:0%;"></div>
+    </div>
+  </div>
 
-  <!-- MAIN APP DASHBOARD -->
-  <div id="mainAppScreen" class="screen">
-    <!-- Daily Goal Bar -->
-    <div style="flex-shrink:0; margin-bottom:0.5rem;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.2rem;">
-        <span id="dailyGoalText" style="font-weight:600;">Today's Progress</span>
-        <span id="dailyGoalPercent" style="font-size:0.85rem; color:var(--text-secondary);">0%</span>
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
+    <h2 id="userGreeting">👋</h2>
+    <button id="logoutMainBtn" class="btn" style="width:auto; padding:0.5rem 1rem;"><i class="fas fa-sign-out-alt"></i></button>
+  </div>
+  <div class="card" id="mentorMessage" style="font-size:0.9rem; margin-bottom:0.5rem; flex-shrink:0;"></div>
+
+  <!-- Avatar Showcase (small) -->
+  <div id="avatarShowcase" class="card" style="display:flex; align-items:center; gap:1rem; padding:0.8rem 1.2rem; margin-bottom:0.5rem; flex-shrink:0;">
+    <div id="avatarIcon" style="font-size:2.5rem;">🙂</div>
+    <div style="flex:1;">
+      <div style="font-weight:bold;" id="avatarShowcaseName">Beginner</div>
+      <div style="font-size:0.8rem; color:var(--text-secondary);">
+        💪<span id="avatarStrength">0</span> 🧠<span id="avatarKnowledge">0</span> ⚡<span id="avatarFocus">0</span> 🎨<span id="avatarCreativity">0</span>
       </div>
-      <div class="progress-bar" id="dailyGoalBar">
-        <div class="progress-fill" id="dailyGoalFill" style="width:0%;"></div>
-      </div>
     </div>
+    <div style="font-size:0.9rem; font-weight:bold; color:var(--accent);">Lv.<span id="avatarLevel">1</span></div>
+  </div>
 
-    <div style="display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
-      <h2 id="userGreeting">👋</h2>
-      <button id="logoutMainBtn" class="btn" style="width:auto; padding:0.5rem 1rem;"><i class="fas fa-sign-out-alt"></i></button>
-    </div>
-    <div class="card" id="mentorMessage" style="font-size:0.9rem; margin-bottom:0.5rem; flex-shrink:0;"></div>
+  <!-- Stats Pills -->
+  <div class="stats-row" style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.5rem; flex-shrink:0;">
+    <div class="stat-pill"><span>🎯</span> <span id="totalHabits">0</span></div>
+    <div class="stat-pill"><span>🔥</span> <span id="currentStreak">0</span> <span style="font-size:0.7rem;">streak</span></div>
+    <div class="stat-pill"><span>💎</span> <span id="userXP">0</span> <span style="font-size:0.7rem;">XP</span></div>
+    <div class="stat-pill"><span>🪙</span> <span id="mintCoins">0</span> <span style="font-size:0.7rem;">coins</span></div>
+    <div class="stat-pill"><span>🔒</span> <span id="mintTokens">0</span> <span style="font-size:0.7rem;">tokens</span></div>
+  </div>
 
-    <!-- Stats Pills -->
-    <div class="stats-row" style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.5rem; flex-shrink:0;">
-      <div class="stat-pill"><span>🎯</span> <span id="totalHabits">0</span></div>
-      <div class="stat-pill"><span>🔥</span> <span id="currentStreak">0</span> <span style="font-size:0.7rem;">streak</span></div>
-      <div class="stat-pill"><span>⭐</span> <span id="userIdentity">Beginner</span></div>
-      <div class="stat-pill"><span>💎</span> <span id="userXP">0</span> <span style="font-size:0.7rem;">XP</span></div>
-      <div class="stat-pill"><span>🪙</span> <span id="mintCoins">0</span> <span style="font-size:0.7rem;">coins</span></div>
-      <div class="stat-pill"><span>🔒</span> <span id="mintTokens">0</span> <span style="font-size:0.7rem;">tokens</span></div>
-    </div>
+  <div class="tabs" style="flex-shrink:0;">
+    <div class="tab active" id="tabMorning">🌅 Morning</div>
+    <div class="tab" id="tabEvening">🌙 Evening</div>
+  </div>
+  <select id="chapterFilter" style="margin-bottom:0.5rem; flex-shrink:0;">
+    <option value="">All Chapters</option>
+  </select>
+  <div id="habitListContainer" style="flex:1; overflow-y:auto; min-height:0;"></div>
+  <div id="habitInsight" class="card" style="font-size:0.85rem; display:none; flex-shrink:0;"></div>
 
-    <div class="tabs" style="flex-shrink:0;">
-      <div class="tab active" id="tabMorning">🌅 Morning</div>
-      <div class="tab" id="tabEvening">🌙 Evening</div>
-    </div>
-    <select id="chapterFilter" style="margin-bottom:0.5rem; flex-shrink:0;">
-      <option value="">All Chapters</option>
-    </select>
-    <div id="habitListContainer" style="flex:1; overflow-y:auto; min-height:0;"></div>
-    <div id="habitInsight" class="card" style="font-size:0.85rem; display:none; flex-shrink:0;"></div>
+  <!-- Floating Add Button -->
+  <button id="addHabitFAB" class="fab-btn">+</button>
 
-    <!-- Floating Add Button -->
-    <button id="addHabitFAB" class="fab-btn" style="position:fixed; bottom:100px; right:20px; z-index:50;">+</button>
+  <!-- Bottom Navigation (5 tabs) -->
+  <div class="bottom-nav" style="flex-shrink:0;">
+    <button id="navDashboard" class="active"><i class="fas fa-home"></i><span>Home</span></button>
+    <button id="navAvatar"><i class="fas fa-user"></i><span>Avatar</span></button>
+    <button id="navBoss"><i class="fas fa-skull"></i><span>Boss</span></button>
+    <button id="navProgress"><i class="fas fa-chart-line"></i><span>Progress</span></button>
+    <button id="navSettings"><i class="fas fa-cog"></i><span>Settings</span></button>
+  </div>
+</div>
 
-    <!-- Bottom Navigation (5 tabs) -->
-    <div class="bottom-nav" style="flex-shrink:0; overflow-x:auto; white-space:nowrap; display:flex; justify-content:space-around; padding:0.5rem 0.2rem; background:var(--bg); border-top:2px solid var(--accent); min-height:4rem; align-items:center;">
-      <button id="navDashboard" class="active" style="flex-direction:column; gap:0.2rem; font-size:0.9rem;"><i class="fas fa-home"></i><span style="font-size:0.65rem;">Home</span></button>
-      <button id="navCity" style="flex-direction:column; gap:0.2rem; font-size:0.9rem;"><i class="fas fa-city"></i><span style="font-size:0.65rem;">City</span></button>
-      <button id="navChallenges" style="flex-direction:column; gap:0.2rem; font-size:0.9rem;"><i class="fas fa-trophy"></i><span style="font-size:0.65rem;">Challenges</span></button>
-      <button id="navProgress" style="flex-direction:column; gap:0.2rem; font-size:0.9rem;"><i class="fas fa-chart-line"></i><span style="font-size:0.65rem;">Progress</span></button>
-      <button id="navMore" style="flex-direction:column; gap:0.2rem; font-size:0.9rem;"><i class="fas fa-ellipsis-h"></i><span style="font-size:0.65rem;">More</span></button>
-    </div>
+<!-- AVATAR SCREEN -->
+<div id="avatarScreen" class="screen">
+  <h2>👤 Your Avatar</h2>
+  <div class="card" style="text-align:center;">
+    <div id="avatarLargeIcon" style="font-size:5rem;">🙂</div>
+    <div style="font-size:1.5rem; font-weight:bold;" id="avatarStageName">Beginner</div>
+    <div style="color:var(--accent); font-weight:bold;">Level <span id="avatarScreenLevel">1</span></div>
+    <div style="margin-top:0.5rem;">XP: <span id="avatarXP">0</span> / 100</div>
+    <div class="progress-bar" style="margin:0.5rem 0;"><div class="progress-fill" id="avatarLevelBar" style="width:0%;"></div></div>
+  </div>
+
+  <!-- Stats -->
+  <div class="card">
+    <h4>📊 Stats</h4>
+    <div>💪 Strength: <span id="avatarStatStrength">0</span></div>
+    <div>🧠 Knowledge: <span id="avatarStatKnowledge">0</span></div>
+    <div>⚡ Focus: <span id="avatarStatFocus">0</span></div>
+    <div>🎨 Creativity: <span id="avatarStatCreativity">0</span></div>
+  </div>
+
+  <!-- Cosmetics Shop (on avatar page) -->
+  <div class="card">
+    <h4>🛍️ Cosmetics</h4>
+    <div id="cosmeticsShop"></div>
+  </div>
+
+  <button class="btn" id="backFromAvatar">← Home</button>
+</div>
+
+
 
     <!-- More Menu (hidden) -->
     <div id="moreMenu" style="position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:var(--bg-card); border-radius:1.5rem; padding:1rem; display:none; flex-wrap:wrap; gap:0.8rem; z-index:60; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
