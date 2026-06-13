@@ -1,64 +1,7 @@
-// Firebase config
-const firebaseConfig = {
-  apiKey: "AIzaSyCWVNHO-YCKX0xFMvVsAx2vByquADBMDrQ",
-  authDomain: "goal-mint.firebaseapp.com",
-  projectId: "goal-mint",
-  storageBucket: "goal-mint.firebasestorage.app",
-  messagingSenderId: "251716328908",
-  appId: "1:251716328908:web:f268362ed2ba17ab9f5169"
-};
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
-
-// Offline persistence
-db.enablePersistence().catch(() => {});
-
+// script.js
+// Global state (some moved to other files, but userDocRef, habits, etc. remain here)
 let currentUser = null, userDocRef = null, habits = [], currentRoutine = 'morning', editingHabitId = null;
 let lastCompletedHabitTime = null, lastCompletedHabitId = null;
-const quotes = ["Small steps, big results.","Consistency is key.","Don't break the chain.","You are what you repeatedly do.","One day at a time."];
-
-// 30 premium themes (all from CSS)
-const shopThemes = [
-  { id: 'ocean', name: 'Ocean', cost: 100, emoji: '🌊' },
-  { id: 'sunset', name: 'Sunset', cost: 120, emoji: '🌅' },
-  { id: 'forest', name: 'Forest', cost: 100, emoji: '🌲' },
-  { id: 'candy', name: 'Candy', cost: 80, emoji: '🍬' },
-  { id: 'neon', name: 'Neon', cost: 150, emoji: '💜' },
-  { id: 'royal', name: 'Royal', cost: 200, emoji: '👑' },
-  { id: 'ember', name: 'Ember', cost: 130, emoji: '🔥' },
-  { id: 'frost', name: 'Frost', cost: 110, emoji: '❄️' },
-  { id: 'aurora', name: 'Aurora', cost: 180, emoji: '🌌' },
-  { id: 'cosmos', name: 'Cosmos', cost: 220, emoji: '🚀' },
-  { id: 'cherry', name: 'Cherry', cost: 90, emoji: '🍒' },
-  { id: 'mint', name: 'Mint', cost: 110, emoji: '🍃' },
-  { id: 'lavender', name: 'Lavender', cost: 130, emoji: '💜' },
-  { id: 'peach', name: 'Peach', cost: 95, emoji: '🍑' },
-  { id: 'azure', name: 'Azure', cost: 140, emoji: '🔷' },
-  { id: 'ruby', name: 'Ruby', cost: 160, emoji: '💎' },
-  { id: 'jade', name: 'Jade', cost: 150, emoji: '🟢' },
-  { id: 'ivory', name: 'Ivory', cost: 120, emoji: '🤍' },
-  { id: 'onyx', name: 'Onyx', cost: 170, emoji: '⬛' },
-  { id: 'coral', name: 'Coral', cost: 105, emoji: '🪸' },
-  { id: 'amethyst', name: 'Amethyst', cost: 180, emoji: '💟' },
-  { id: 'topaz', name: 'Topaz', cost: 135, emoji: '🔶' },
-  { id: 'sapphire', name: 'Sapphire', cost: 190, emoji: '🔵' },
-  { id: 'emerald', name: 'Emerald', cost: 200, emoji: '🟩' },
-  { id: 'garnet', name: 'Garnet', cost: 145, emoji: '♦️' },
-  { id: 'peridot', name: 'Peridot', cost: 125, emoji: '💚' },
-  { id: 'aquamarine', name: 'Aquamarine', cost: 160, emoji: '🌊' },
-  { id: 'diamond', name: 'Diamond', cost: 250, emoji: '💠' },
-  { id: 'obsidian', name: 'Obsidian', cost: 210, emoji: '🖤' },
-  { id: 'platinum', name: 'Platinum', cost: 230, emoji: '🪨' }
-];
-const freeThemes = ['growth', 'productivity', 'darkfocus', 'golden', 'midnight'];
-
-// XP packs
-const xpPacksList = [
-  { id: 'xp_500', amount: 500, cost: 50 },
-  { id: 'xp_1200', amount: 1200, cost: 100 },
-  { id: 'xp_5000', amount: 5000, cost: 400 }
-];
 
 document.addEventListener('DOMContentLoaded', () => {
   const $ = id => document.getElementById(id);
@@ -108,6 +51,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const chaptersList = $('chaptersList'), impactStats = $('impactStats'), achievementsList = $('achievementsList'), leaderboardList = $('leaderboardList');
   const parkCount = $('parkCount'), libraryCount = $('libraryCount'), officeCount = $('officeCount'), galleryCount = $('galleryCount');
 
+  // Expose building counters globally for city3d.js
+  window.parkCount = parkCount;
+  window.libraryCount = libraryCount;
+  window.officeCount = officeCount;
+  window.galleryCount = galleryCount;
+
   // NEW BOTTOM NAV (5 tabs + more menu)
   const navDashboard = $('navDashboard'), navCity = $('navCity'), navChallenges = $('navChallenges');
   const navProgress = $('navProgress'), navMore = $('navMore');
@@ -115,271 +64,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const moreDNA = $('moreDNA'), moreMessages = $('moreMessages'), moreBoss = $('moreBoss');
   const moreChapters = $('moreChapters'), moreImpact = $('moreImpact');
   const moreAchievements = $('moreAchievements'), moreLeaderboard = $('moreLeaderboard'), moreSettings = $('moreSettings');
-
-  // 3D City
-  let threeCity = null;
-
-  class ThreeCity {
-    constructor(container) {
-      this.container = container;
-      this.scene = new THREE.Scene();
-      this.scene.background = new THREE.Color(0x87CEEB);
-
-      const aspect = container.clientWidth / container.clientHeight;
-      this.camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
-      this.camera.position.set(20, 15, 20);
-      this.camera.lookAt(0, 0, 0);
-
-      this.renderer = new THREE.WebGLRenderer({ antialias: true });
-      this.renderer.setSize(container.clientWidth, container.clientHeight);
-      this.renderer.shadowMap.enabled = true;
-      this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-      container.appendChild(this.renderer.domElement);
-
-      this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
-      this.controls.enableDamping = true;
-      this.controls.dampingFactor = 0.05;
-      this.controls.maxPolarAngle = Math.PI / 2.5;
-      this.controls.target.set(0, 0, 0);
-
-      const ambient = new THREE.AmbientLight(0xffffff, 0.6);
-      this.scene.add(ambient);
-
-      const sun = new THREE.DirectionalLight(0xffffff, 0.8);
-      sun.position.set(50, 50, 50);
-      sun.castShadow = true;
-      sun.shadow.mapSize.width = 1024;
-      sun.shadow.mapSize.height = 1024;
-      sun.shadow.camera.near = 1;
-      sun.shadow.camera.far = 100;
-      sun.shadow.camera.left = -30;
-      sun.shadow.camera.right = 30;
-      sun.shadow.camera.top = 30;
-      sun.shadow.camera.bottom = -30;
-      this.scene.add(sun);
-
-      const groundGeo = new THREE.PlaneGeometry(60, 60);
-      const groundMat = new THREE.MeshStandardMaterial({ color: 0x7CB342, roughness: 0.8 });
-      const ground = new THREE.Mesh(groundGeo, groundMat);
-      ground.rotation.x = -Math.PI / 2;
-      ground.receiveShadow = true;
-      this.scene.add(ground);
-
-      const roadGeo = new THREE.PlaneGeometry(60, 3);
-      const roadMat = new THREE.MeshStandardMaterial({ color: 0x424242, roughness: 0.9 });
-      const road = new THREE.Mesh(roadGeo, roadMat);
-      road.rotation.x = -Math.PI / 2;
-      road.position.y = 0.01;
-      road.receiveShadow = true;
-      this.scene.add(road);
-
-      for (let i = -25; i < 25; i += 3) {
-        const lineGeo = new THREE.BoxGeometry(1, 0.05, 0.2);
-        const lineMat = new THREE.MeshStandardMaterial({ color: 0xFFC107 });
-        const line = new THREE.Mesh(lineGeo, lineMat);
-        line.position.set(i, 0.02, 0);
-        line.receiveShadow = true;
-        this.scene.add(line);
-      }
-
-      this.buildingGroups = [];
-      this.animationId = null;
-      this.animate();
-    }
-
-    updateFromData(city) {
-      this.buildingGroups.forEach(group => this.scene.remove(group));
-      this.buildingGroups = [];
-
-      const types = {
-        park: (x, z) => this.createPark(x, z),
-        library: (x, z) => this.createLibrary(x, z),
-        office: (x, z) => this.createOffice(x, z),
-        gallery: (x, z) => this.createGallery(x, z)
-      };
-
-      Object.entries(city).forEach(([type, count]) => {
-        for (let i = 0; i < count; i++) {
-          const x = (Math.random() - 0.5) * 40;
-          const z = (Math.random() - 0.5) * 40;
-          if (types[type]) {
-            const group = types[type](x, z);
-            if (group) {
-              this.scene.add(group);
-              this.buildingGroups.push(group);
-            }
-          }
-        }
-      });
-    }
-
-    createPark(x, z) {
-      const group = new THREE.Group();
-      const grassGeo = new THREE.BoxGeometry(3, 0.2, 3);
-      const grassMat = new THREE.MeshStandardMaterial({ color: 0x4CAF50 });
-      const grass = new THREE.Mesh(grassGeo, grassMat);
-      grass.position.set(x, 0.1, z);
-      grass.receiveShadow = true;
-      grass.castShadow = true;
-      group.add(grass);
-
-      for (let i = 0; i < 2; i++) {
-        const treeGroup = new THREE.Group();
-        const trunkGeo = new THREE.CylinderGeometry(0.2, 0.25, 1.5, 8);
-        const trunkMat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
-        const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-        trunk.position.y = 0.75;
-        trunk.castShadow = true;
-        trunk.receiveShadow = true;
-        treeGroup.add(trunk);
-
-        const leafPositions = [1.2, 1.6, 2.0];
-        leafPositions.forEach((y, idx) => {
-          const leafGeo = new THREE.ConeGeometry(0.6 - idx * 0.1, 0.6, 8);
-          const leafMat = new THREE.MeshStandardMaterial({ color: 0x2E7D32 });
-          const leaf = new THREE.Mesh(leafGeo, leafMat);
-          leaf.position.y = y;
-          leaf.castShadow = true;
-          leaf.receiveShadow = true;
-          treeGroup.add(leaf);
-        });
-
-        treeGroup.position.set(x - 0.8 + i * 1.6, 0.1, z - 0.8 + i * 1.6);
-        group.add(treeGroup);
-      }
-      return group;
-    }
-
-    createLibrary(x, z) {
-      const group = new THREE.Group();
-      const bodyGeo = new THREE.BoxGeometry(3, 3, 2.5);
-      const bodyMat = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.6 });
-      const body = new THREE.Mesh(bodyGeo, bodyMat);
-      body.position.set(x, 1.5, z);
-      body.castShadow = true;
-      body.receiveShadow = true;
-      group.add(body);
-
-      const roofGeo = new THREE.ConeGeometry(2.5, 1.2, 4);
-      const roofMat = new THREE.MeshStandardMaterial({ color: 0x5D4037 });
-      const roof = new THREE.Mesh(roofGeo, roofMat);
-      roof.position.set(x, 3.6, z);
-      roof.rotation.y = Math.PI / 4;
-      roof.castShadow = true;
-      roof.receiveShadow = true;
-      group.add(roof);
-
-      for (let row = 0; row < 2; row++) {
-        for (let col = 0; col < 3; col++) {
-          const winGeo = new THREE.BoxGeometry(0.4, 0.6, 0.1);
-          const winMat = new THREE.MeshStandardMaterial({ color: 0xFFE082, emissive: 0xFFD54F, emissiveIntensity: 0.5 });
-          const win = new THREE.Mesh(winGeo, winMat);
-          win.position.set(x - 1 + col * 1, 1.5 + row * 1.2, z + 1.26);
-          win.castShadow = true;
-          group.add(win);
-        }
-      }
-      return group;
-    }
-
-    createOffice(x, z) {
-      const group = new THREE.Group();
-      const height = 5 + Math.random() * 3;
-      const bodyGeo = new THREE.BoxGeometry(2.5, height, 2.5);
-      const bodyMat = new THREE.MeshStandardMaterial({ color: 0x607D8B, roughness: 0.4, metalness: 0.7 });
-      const body = new THREE.Mesh(bodyGeo, bodyMat);
-      body.position.set(x, height / 2, z);
-      body.castShadow = true;
-      body.receiveShadow = true;
-      group.add(body);
-
-      const floors = Math.floor(height / 1.2);
-      for (let f = 0; f < floors; f++) {
-        for (let side = 0; side < 4; side++) {
-          const winGeo = new THREE.BoxGeometry(0.5, 0.8, 0.05);
-          const winMat = new THREE.MeshStandardMaterial({ color: 0xFFE082, emissive: 0xFFC107, emissiveIntensity: 0.4 });
-          const win = new THREE.Mesh(winGeo, winMat);
-          const angle = (side * Math.PI) / 2;
-          win.position.set(
-            x + Math.sin(angle) * 1.26,
-            0.8 + f * 1.2,
-            z + Math.cos(angle) * 1.26
-          );
-          win.rotation.y = angle;
-          win.castShadow = true;
-          group.add(win);
-        }
-      }
-      return group;
-    }
-
-    createGallery(x, z) {
-      const group = new THREE.Group();
-      const bodyGeo = new THREE.BoxGeometry(3.5, 2.5, 3);
-      const bodyMat = new THREE.MeshStandardMaterial({ color: 0xE91E63, roughness: 0.5 });
-      const body = new THREE.Mesh(bodyGeo, bodyMat);
-      body.position.set(x, 1.25, z);
-      body.castShadow = true;
-      body.receiveShadow = true;
-      group.add(body);
-
-      const domeGeo = new THREE.SphereGeometry(2, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2);
-      const domeMat = new THREE.MeshStandardMaterial({ color: 0xAD1457, roughness: 0.3 });
-      const dome = new THREE.Mesh(domeGeo, domeMat);
-      dome.position.set(x, 2.5, z);
-      dome.castShadow = true;
-      dome.receiveShadow = true;
-      group.add(dome);
-
-      for (let i = 0; i < 4; i++) {
-        const winGeo = new THREE.BoxGeometry(0.6, 0.8, 0.1);
-        const winMat = new THREE.MeshStandardMaterial({ color: 0xFFE082, emissive: 0xFFD54F, emissiveIntensity: 0.5 });
-        const win = new THREE.Mesh(winGeo, winMat);
-        win.position.set(x - 1.2 + i * 0.8, 1.5, z + 1.51);
-        group.add(win);
-      }
-      return group;
-    }
-
-    animate() {
-      this.animationId = requestAnimationFrame(() => this.animate());
-      this.controls.update();
-      this.renderer.render(this.scene, this.camera);
-    }
-
-    destroy() {
-      if (this.animationId) cancelAnimationFrame(this.animationId);
-      this.renderer.dispose();
-      this.container.removeChild(this.renderer.domElement);
-    }
-  }
-
-  async function renderCity() {
-    const container = document.getElementById('three-container');
-    if (!container || !userDocRef) return;
-
-    if (!threeCity) {
-      threeCity = new ThreeCity(container);
-      window.addEventListener('resize', () => {
-        if (!threeCity || !threeCity.camera) return;
-        const w = container.clientWidth;
-        const h = container.clientHeight;
-        threeCity.camera.aspect = w / h;
-        threeCity.camera.updateProjectionMatrix();
-        threeCity.renderer.setSize(w, h);
-      });
-    }
-
-    const doc = await userDocRef.get();
-    const city = doc.data()?.cityBuildings || { park: 0, library: 0, office: 0, gallery: 0 };
-
-    if (parkCount) parkCount.textContent = city.park || 0;
-    if (libraryCount) libraryCount.textContent = city.library || 0;
-    if (officeCount) officeCount.textContent = city.office || 0;
-    if (galleryCount) galleryCount.textContent = city.gallery || 0;
-
-    threeCity.updateFromData(city);
-  }
 
   // --- SCREEN SWITCH ---
   function showScreen(screen) {
@@ -448,10 +132,6 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) { alert('Registration failed: ' + e.message); }
   });
 
-  function generateReferralCode() {
-    return Math.random().toString(36).substring(2, 10).toUpperCase();
-  }
-
   if (logoutMainBtn) logoutMainBtn.addEventListener('click', () => auth.signOut());
 
   async function loadUserData() {
@@ -473,39 +153,10 @@ document.addEventListener('DOMContentLoaded', () => {
     updateMentorMessage();
   }
 
-  function getThemeDisplayName(themeId) {
-    const all = [...freeThemes.map(t => ({ id: t, name: t.charAt(0).toUpperCase() + t.slice(1) })), ...shopThemes];
-    const found = all.find(t => t.id === themeId);
-    return found ? found.name : themeId;
-  }
-
   // --- HABITS ---
   async function loadHabits() {
     const snap = await userDocRef.collection('habits').get();
     habits = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  }
-
-  function getTodayStr() { return new Date().toISOString().split('T')[0]; }
-  function getYesterdayStr() { return new Date(Date.now()-86400000).toISOString().split('T')[0]; }
-  function isToday(s) { return s === getTodayStr(); }
-  function isYesterday(s) { return s === getYesterdayStr(); }
-  function habitScheduledToday(h) {
-    if (!h.repeatDays || h.repeatDays.length === 0) return h.repeat === 'daily' || h.repeat === 'weekly';
-    return h.repeatDays.includes(new Date().getDay());
-  }
-  function habitScheduledYesterday(h) {
-    const yesterday = (new Date().getDay() + 6) % 7;
-    if (!h.repeatDays || h.repeatDays.length === 0) return h.repeat === 'daily' || h.repeat === 'weekly';
-    return h.repeatDays.includes(yesterday);
-  }
-
-  function getIdentity(xp) {
-    if (xp >= 5000) return 'Legend';
-    else if (xp >= 2000) return 'Master Builder';
-    else if (xp >= 1000) return 'Consistent';
-    else if (xp >= 500) return 'Focused';
-    else if (xp >= 100) return 'Disciplined';
-    return 'Beginner';
   }
 
   function updateMentorMessage() {
@@ -587,7 +238,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     populateChapterFilter();
 
-    // Update daily goal bar
     const totalToday = todayFiltered.length;
     const completedToday = todayFiltered.filter(h => isToday(h.lastCompletedDate)).length;
     const percent = totalToday ? Math.round((completedToday / totalToday) * 100) : 0;
@@ -742,7 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }).join('');
   }
 
-  // Messages, Bosses, Chapters, Impact, Achievements, Leaderboard (unchanged)
+  // Messages, Bosses, Chapters, Impact, Achievements, Leaderboard
   async function renderMessages() {
     if (!messagesList || !userDocRef) return;
     const snap = await userDocRef.collection('messages').get();
@@ -830,11 +480,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // MINT SHOP (updated with XP packs and all 30 themes)
+  // MINT SHOP
   async function renderShop() {
-    if (!shopItems || !userDocRef) {
-      return;
-    }
+    if (!shopItems || !userDocRef) return;
     try {
       const userDoc = await userDocRef.get();
       if (!userDoc.exists) return;
@@ -846,7 +494,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (shopCoinBalance) shopCoinBalance.textContent = coins;
       if (shopXPDisplay) shopXPDisplay.textContent = xp;
 
-      // XP packs
       if (xpPacks) {
         xpPacks.innerHTML = xpPacksList.map(p => `
           <div class="shop-item">
@@ -872,7 +519,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       }
 
-      // Themes
       shopItems.innerHTML = shopThemes.map(theme => {
         const isOwned = owned.includes(theme.id);
         const isCurrent = currentTheme === theme.id;
@@ -894,10 +540,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const owned = doc.data().ownedThemes || [];
           if (owned.includes(themeId)) return;
           owned.push(themeId);
-          await userDocRef.update({
-            mintCoins: firebase.firestore.FieldValue.increment(-cost),
-            ownedThemes: owned
-          });
+          await userDocRef.update({ mintCoins: firebase.firestore.FieldValue.increment(-cost), ownedThemes: owned });
           const updated = await userDocRef.get();
           if (mintCoinsEl) mintCoinsEl.textContent = updated.data().mintCoins;
           renderShop();
@@ -918,25 +561,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // ========== NEW 5-TAB NAVIGATION ==========
+  // NAVIGATION
   function setActiveNav(btn) {
     [navDashboard, navCity, navChallenges, navProgress, navMore].forEach(b => b?.classList.remove('active'));
     if (btn) btn.classList.add('active');
   }
 
-  // Main tab navigation
   if (navDashboard) navDashboard.addEventListener('click', () => { showScreen(mainAppScreen); setActiveNav(navDashboard); });
   if (navCity) navCity.addEventListener('click', () => { showScreen(cityScreen); renderCity(); setActiveNav(navCity); });
   if (navChallenges) navChallenges.addEventListener('click', () => { showScreen(bossScreen); renderBosses(); setActiveNav(navChallenges); });
   if (navProgress) navProgress.addEventListener('click', () => { showScreen(achievementsScreen); loadAchievements(); setActiveNav(navProgress); });
   if (navMore) navMore.addEventListener('click', () => {
-    if (moreMenu) {
-      moreMenu.style.display = moreMenu.style.display === 'flex' ? 'none' : 'flex';
-    }
+    if (moreMenu) { moreMenu.style.display = moreMenu.style.display === 'flex' ? 'none' : 'flex'; }
     setActiveNav(navMore);
   });
 
-  // More menu items
   if (moreDNA) moreDNA.addEventListener('click', () => { showScreen(dnaScreen); renderDNA(); moreMenu.style.display = 'none'; });
   if (moreMessages) moreMessages.addEventListener('click', () => { showScreen(messagesScreen); renderMessages(); moreMenu.style.display = 'none'; });
   if (moreBoss) moreBoss.addEventListener('click', () => { showScreen(bossScreen); renderBosses(); moreMenu.style.display = 'none'; });
@@ -946,7 +585,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (moreLeaderboard) moreLeaderboard.addEventListener('click', () => { showScreen(leaderboardScreen); loadLeaderboard(); moreMenu.style.display = 'none'; });
   if (moreSettings) moreSettings.addEventListener('click', () => { showScreen(settingsView); moreMenu.style.display = 'none'; });
 
-  // Close more menu when clicking outside
   window.addEventListener('click', e => {
     if (moreMenu && !moreMenu.contains(e.target) && e.target !== navMore) {
       moreMenu.style.display = 'none';
@@ -997,7 +635,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (showPrivacyBtn) showPrivacyBtn.addEventListener('click', () => privacyModal?.classList.add('active'));
   if (showFaqBtn) showFaqBtn.addEventListener('click', () => faqModal?.classList.add('active'));
 
-  // Close modals
   document.querySelectorAll('.close-modal').forEach(b => {
     b.addEventListener('click', () => {
       const modal = document.getElementById(b.dataset.modal);
@@ -1006,7 +643,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   window.addEventListener('click', e => { if (e.target.classList.contains('modal')) e.target.classList.remove('active'); });
 
-  // Delete account
   if (deleteAccountBtn) deleteAccountBtn.addEventListener('click', async () => {
     if (confirm('Delete account and all data?')) {
       await userDocRef.delete();
@@ -1024,17 +660,13 @@ document.addEventListener('DOMContentLoaded', () => {
     replayModal.classList.add('active');
   }
 
-  // Theme functions
   function applyTheme(theme) {
     document.body.className = `theme-${theme}`;
     localStorage.setItem('goalMintTheme', theme);
     if (currentThemeName) currentThemeName.textContent = getThemeDisplayName(theme);
   }
-  function applySavedTheme() {
-    applyTheme(localStorage.getItem('goalMintTheme') || 'midnight');
-  }
+  function applySavedTheme() { applyTheme(localStorage.getItem('goalMintTheme') || 'midnight'); }
 
-  // Share
   if (shareProgressBtn) shareProgressBtn.addEventListener('click', async () => {
     const doc = await userDocRef.get();
     const d = doc.data();
@@ -1043,7 +675,6 @@ document.addEventListener('DOMContentLoaded', () => {
     else alert('Copy: ' + text);
   });
 
-  // Copy referral code
   if (copyReferralBtn) copyReferralBtn.addEventListener('click', async () => {
     const code = myReferralCode?.textContent;
     if (code && code !== 'Loading...') {
@@ -1052,12 +683,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Notifications
   function requestNotificationPermission() {
-    if ('Notification' in window) {
-      if (Notification.permission === 'default') {
-        Notification.requestPermission();
-      }
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
     }
   }
   setInterval(() => {
