@@ -1,5 +1,4 @@
-// script.js
-// Global state (some moved to other files, but userDocRef, habits, etc. remain here)
+// script.js – GoaLMint with Avatar System (no city)
 let currentUser = null, userDocRef = null, habits = [], currentRoutine = 'morning', editingHabitId = null;
 let lastCompletedHabitTime = null, lastCompletedHabitId = null;
 
@@ -8,9 +7,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // SCREENS
   const loginScreen = $('loginScreen'), registerScreen = $('registerScreen'), mainAppScreen = $('mainAppScreen');
-  const dnaScreen = $('dnaScreen'), cityScreen = $('cityScreen'), messagesScreen = $('messagesScreen');
-  const bossScreen = $('bossScreen'), chaptersScreen = $('chaptersScreen'), impactScreen = $('impactScreen');
-  const achievementsScreen = $('achievementsScreen'), leaderboardScreen = $('leaderboardScreen'), settingsView = $('settingsView');
+  const avatarScreen = $('avatarScreen');
+  const bossScreen = $('bossScreen'), achievementsScreen = $('achievementsScreen'), settingsView = $('settingsView');
+  // Other screens (accessible from Settings)
+  const dnaScreen = $('dnaScreen'), messagesScreen = $('messagesScreen');
+  const chaptersScreen = $('chaptersScreen'), impactScreen = $('impactScreen');
+  const leaderboardScreen = $('leaderboardScreen');
 
   // AUTH
   const loginEmail = $('loginEmail'), loginPassword = $('loginPassword'), loginBtn = $('loginBtn'), showRegisterBtn = $('showRegisterBtn');
@@ -19,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // DASHBOARD
   const userGreeting = $('userGreeting'), totalHabitsEl = $('totalHabits'), currentStreakEl = $('currentStreak');
-  const userIdentity = $('userIdentity'), userXPEl = $('userXP'), mintCoinsEl = $('mintCoins'), mintTokensEl = $('mintTokens');
+  const userXPEl = $('userXP'), mintCoinsEl = $('mintCoins'), mintTokensEl = $('mintTokens');
   const habitListContainer = $('habitListContainer'), tabMorning = $('tabMorning'), tabEvening = $('tabEvening'), addHabitFAB = $('addHabitFAB');
   const logoutMainBtn = $('logoutMainBtn'), mentorMessage = $('mentorMessage');
   const chapterFilter = $('chapterFilter'), habitInsight = $('habitInsight');
@@ -46,24 +48,40 @@ document.addEventListener('DOMContentLoaded', () => {
   const progressReplayBtn = $('progressReplayBtn'), deleteAccountBtn = $('deleteAccountBtn'), backFromSettings = $('backFromSettings');
   const currentThemeName = $('currentThemeName');
 
+  // Settings buttons for hidden screens
+  const openDNABtn = $('openDNABtn'), openMessagesBtn = $('openMessagesBtn'), openChaptersBtn = $('openChaptersBtn');
+  const openImpactBtn = $('openImpactBtn'), openLeaderboardBtn = $('openLeaderboardBtn');
+
   // OTHER SCREENS
   const dnaBars = $('dnaBars'), messagesList = $('messagesList'), activeBosses = $('activeBosses');
   const chaptersList = $('chaptersList'), impactStats = $('impactStats'), achievementsList = $('achievementsList'), leaderboardList = $('leaderboardList');
-  const parkCount = $('parkCount'), libraryCount = $('libraryCount'), officeCount = $('officeCount'), galleryCount = $('galleryCount');
 
-  // Expose building counters globally for city3d.js
-  window.parkCount = parkCount;
-  window.libraryCount = libraryCount;
-  window.officeCount = officeCount;
-  window.galleryCount = galleryCount;
+  // AVATAR DASHBOARD SHOWCASE
+  const avatarIcon = $('avatarIcon'), avatarShowcaseName = $('avatarShowcaseName');
+  const avatarStrength = $('avatarStrength'), avatarKnowledge = $('avatarKnowledge');
+  const avatarFocus = $('avatarFocus'), avatarCreativity = $('avatarCreativity'), avatarLevel = $('avatarLevel');
 
-  // NEW BOTTOM NAV (5 tabs + more menu)
-  const navDashboard = $('navDashboard'), navCity = $('navCity'), navChallenges = $('navChallenges');
-  const navProgress = $('navProgress'), navMore = $('navMore');
-  const moreMenu = $('moreMenu');
-  const moreDNA = $('moreDNA'), moreMessages = $('moreMessages'), moreBoss = $('moreBoss');
-  const moreChapters = $('moreChapters'), moreImpact = $('moreImpact');
-  const moreAchievements = $('moreAchievements'), moreLeaderboard = $('moreLeaderboard'), moreSettings = $('moreSettings');
+  // AVATAR FULL SCREEN
+  const avatarLargeIcon = $('avatarLargeIcon'), avatarStageName = $('avatarStageName');
+  const avatarScreenLevel = $('avatarScreenLevel'), avatarXP = $('avatarXP'), avatarLevelBar = $('avatarLevelBar');
+  const avatarStatStrength = $('avatarStatStrength'), avatarStatKnowledge = $('avatarStatKnowledge');
+  const avatarStatFocus = $('avatarStatFocus'), avatarStatCreativity = $('avatarStatCreativity');
+  const cosmeticsShop = $('cosmeticsShop');
+
+  // NEW BOTTOM NAV (5 tabs)
+  const navDashboard = $('navDashboard'), navAvatar = $('navAvatar'), navBoss = $('navBoss');
+  const navProgress = $('navProgress'), navSettings = $('navSettings');
+
+  // ---- INIT AVATAR SYSTEM ----
+  AvatarSystem.init({
+    avatarStrength, avatarKnowledge, avatarFocus, avatarCreativity,
+    avatarShowcaseName, avatarLevel, avatarIcon,
+    avatarLargeIcon, avatarStageName, avatarScreenLevel, avatarXP, avatarLevelBar,
+    avatarStatStrength, avatarStatKnowledge, avatarStatFocus, avatarStatCreativity,
+    cosmeticsShop
+  });
+  // Expose mintCoinsEl globally for avatar purchases
+  window.mintCoinsEl = mintCoinsEl;
 
   // --- SCREEN SWITCH ---
   function showScreen(screen) {
@@ -112,7 +130,8 @@ document.addEventListener('DOMContentLoaded', () => {
         totalXP: 0, level: 1, badges: [],
         settings: { theme: 'midnight', trackingMode: 'normal', cause: 'education' },
         mintCoins: 500, mintTokens: 3,
-        cityBuildings: { park: 0, library: 0, office: 0, gallery: 0 },
+        avatarStats: { strength: 0, knowledge: 0, focus: 0, creativity: 0 },
+        ownedCosmetics: [], equippedCosmetics: {},
         identity: 'Beginner', ownedThemes: ['midnight'],
         referralCode
       };
@@ -141,7 +160,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (userGreeting) userGreeting.textContent = `👋 ${d.username || 'User'}`;
     const xp = d.totalXP || 0;
     if (userXPEl) userXPEl.textContent = xp;
-    if (userIdentity) userIdentity.textContent = getIdentity(xp);
     if (mintCoinsEl) mintCoinsEl.textContent = d.mintCoins || 0;
     if (mintTokensEl) mintTokensEl.textContent = d.mintTokens || 0;
     if (trackingMode) trackingMode.value = d.settings?.trackingMode || 'normal';
@@ -151,6 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentThemeName) currentThemeName.textContent = getThemeDisplayName(theme);
     if (myReferralCode) myReferralCode.textContent = d.referralCode || '';
     updateMentorMessage();
+    AvatarSystem.updateShowcase(d);
   }
 
   // --- HABITS ---
@@ -286,9 +305,9 @@ document.addEventListener('DOMContentLoaded', () => {
     await userDocRef.update({ totalXP: xp, level, badges, mintCoins: newCoins, mintTokens: newTokens, identity: getIdentity(xp) });
     await db.collection('leaderboard').doc(currentUser.uid).set({ username: d.username, xp }, { merge: true });
 
+    // Increment avatar stat instead of city building
     if (h.category) {
-      const catMap = { health: 'park', learning: 'library', productivity: 'office', creativity: 'gallery' };
-      await userDocRef.update({ [`cityBuildings.${catMap[h.category] || 'park'}`]: firebase.firestore.FieldValue.increment(1) });
+      AvatarSystem.incrementStat(h.category);
     }
     trackCombination(habitId);
     updateImpact();
@@ -296,11 +315,9 @@ document.addEventListener('DOMContentLoaded', () => {
     await loadHabits(); renderDashboard();
     if (mintCoinsEl) mintCoinsEl.textContent = newCoins;
     if (mintTokensEl) mintTokensEl.textContent = newTokens;
-    if (userIdentity) userIdentity.textContent = getIdentity(xp);
-    if (userXPEl) userXPEl.textContent = xp;
   }
 
-  // Habit form
+  // Habit form (unchanged)
   function openEditHabit(id) {
     const h = habits.find(x => x.id === id); if (!h) return;
     editingHabitId = id;
@@ -364,7 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
     await loadHabits(); renderDashboard();
   });
 
-  // Chapters
+  // Chapters (unchanged)
   async function populateChapterFilter() {
     if (!chapterFilter || !userDocRef) return;
     const snap = await userDocRef.collection('chapters').get();
@@ -380,7 +397,7 @@ document.addEventListener('DOMContentLoaded', () => {
     habitChapter.innerHTML = '<option value="">No Chapter</option>' + chapters.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
   }
 
-  // Render other screens
+  // Render DNA etc.
   function renderDNA() {
     if (!dnaBars) return;
     const cats = { Health: 0, Learning: 0, Productivity: 0, Creativity: 0 };
@@ -392,7 +409,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }).join('');
   }
 
-  // Messages, Bosses, Chapters, Impact, Achievements, Leaderboard
   async function renderMessages() {
     if (!messagesList || !userDocRef) return;
     const snap = await userDocRef.collection('messages').get();
@@ -480,7 +496,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // MINT SHOP
+  // MINT SHOP (unchanged)
   async function renderShop() {
     if (!shopItems || !userDocRef) return;
     try {
@@ -561,46 +577,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // NAVIGATION
+  // ---- NAVIGATION (5 tabs) ----
   function setActiveNav(btn) {
-    [navDashboard, navCity, navChallenges, navProgress, navMore].forEach(b => b?.classList.remove('active'));
+    [navDashboard, navAvatar, navBoss, navProgress, navSettings].forEach(b => b?.classList.remove('active'));
     if (btn) btn.classList.add('active');
   }
 
   if (navDashboard) navDashboard.addEventListener('click', () => { showScreen(mainAppScreen); setActiveNav(navDashboard); });
-  if (navCity) navCity.addEventListener('click', () => { showScreen(cityScreen); renderCity(); setActiveNav(navCity); });
-  if (navChallenges) navChallenges.addEventListener('click', () => { showScreen(bossScreen); renderBosses(); setActiveNav(navChallenges); });
+  if (navAvatar) navAvatar.addEventListener('click', () => { showScreen(avatarScreen); AvatarSystem.renderScreen(); setActiveNav(navAvatar); });
+  if (navBoss) navBoss.addEventListener('click', () => { showScreen(bossScreen); renderBosses(); setActiveNav(navBoss); });
   if (navProgress) navProgress.addEventListener('click', () => { showScreen(achievementsScreen); loadAchievements(); setActiveNav(navProgress); });
-  if (navMore) navMore.addEventListener('click', () => {
-    if (moreMenu) { moreMenu.style.display = moreMenu.style.display === 'flex' ? 'none' : 'flex'; }
-    setActiveNav(navMore);
-  });
-
-  if (moreDNA) moreDNA.addEventListener('click', () => { showScreen(dnaScreen); renderDNA(); moreMenu.style.display = 'none'; });
-  if (moreMessages) moreMessages.addEventListener('click', () => { showScreen(messagesScreen); renderMessages(); moreMenu.style.display = 'none'; });
-  if (moreBoss) moreBoss.addEventListener('click', () => { showScreen(bossScreen); renderBosses(); moreMenu.style.display = 'none'; });
-  if (moreChapters) moreChapters.addEventListener('click', () => { showScreen(chaptersScreen); renderChapters(); moreMenu.style.display = 'none'; });
-  if (moreImpact) moreImpact.addEventListener('click', () => { showScreen(impactScreen); updateImpact(); moreMenu.style.display = 'none'; });
-  if (moreAchievements) moreAchievements.addEventListener('click', () => { showScreen(achievementsScreen); loadAchievements(); moreMenu.style.display = 'none'; });
-  if (moreLeaderboard) moreLeaderboard.addEventListener('click', () => { showScreen(leaderboardScreen); loadLeaderboard(); moreMenu.style.display = 'none'; });
-  if (moreSettings) moreSettings.addEventListener('click', () => { showScreen(settingsView); moreMenu.style.display = 'none'; });
-
-  window.addEventListener('click', e => {
-    if (moreMenu && !moreMenu.contains(e.target) && e.target !== navMore) {
-      moreMenu.style.display = 'none';
-    }
-  });
+  if (navSettings) navSettings.addEventListener('click', () => { showScreen(settingsView); setActiveNav(navSettings); });
 
   // Back buttons
-  $('backFromDNA')?.addEventListener('click', () => showScreen(mainAppScreen));
-  $('backFromCity')?.addEventListener('click', () => showScreen(mainAppScreen));
-  $('backFromMessages')?.addEventListener('click', () => showScreen(mainAppScreen));
+  $('backFromAvatar')?.addEventListener('click', () => showScreen(mainAppScreen));
   $('backFromBoss')?.addEventListener('click', () => showScreen(mainAppScreen));
+  $('backFromAchievements')?.addEventListener('click', () => showScreen(mainAppScreen));
+  $('backFromDNA')?.addEventListener('click', () => showScreen(mainAppScreen));
+  $('backFromMessages')?.addEventListener('click', () => showScreen(mainAppScreen));
   $('backFromChapters')?.addEventListener('click', () => showScreen(mainAppScreen));
   $('backFromImpact')?.addEventListener('click', () => showScreen(mainAppScreen));
-  $('backFromAchievements')?.addEventListener('click', () => showScreen(mainAppScreen));
   $('backFromLeaderboard')?.addEventListener('click', () => showScreen(mainAppScreen));
   if (backFromSettings) backFromSettings.addEventListener('click', () => showScreen(mainAppScreen));
+
+  // Settings buttons to hidden screens
+  if (openDNABtn) openDNABtn.addEventListener('click', () => showScreen(dnaScreen));
+  if (openMessagesBtn) openMessagesBtn.addEventListener('click', () => showScreen(messagesScreen));
+  if (openChaptersBtn) openChaptersBtn.addEventListener('click', () => showScreen(chaptersScreen));
+  if (openImpactBtn) openImpactBtn.addEventListener('click', () => showScreen(impactScreen));
+  if (openLeaderboardBtn) openLeaderboardBtn.addEventListener('click', () => showScreen(leaderboardScreen));
 
   // Other modal openers
   $('newMessageBtn')?.addEventListener('click', () => messageModal?.classList.add('active'));
