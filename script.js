@@ -1,4 +1,4 @@
-// script.js – GoaLMint with Avatar System (no city)
+// script.js – GoaLMint with Avatar System (no city, full cosmetics shop)
 let currentUser = null, userDocRef = null, habits = [], currentRoutine = 'morning', editingHabitId = null;
 let lastCompletedHabitTime = null, lastCompletedHabitId = null;
 
@@ -38,6 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const bossModal = $('bossModal'), bossName = $('bossName'), bossDays = $('bossDays'), startBossChallengeBtn = $('startBossChallengeBtn');
   const chapterModal = $('chapterModal'), chapterName = $('chapterName'), saveChapterBtn = $('saveChapterBtn');
   const shopModal = $('shopModal'), shopItems = $('shopItems'), xpPacks = $('xpPacks'), shopCoinBalance = $('shopCoinBalance'), shopXPDisplay = $('shopXPDisplay');
+  const shopCosmetics = $('shopCosmetics');               // <-- new cosmetics section in shop
   const replayModal = $('replayModal'), replayStats = $('replayStats');
   const privacyModal = $('privacyModal'), faqModal = $('faqModal'), howItWorksModal = $('howItWorksModal');
 
@@ -73,14 +74,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const navProgress = $('navProgress'), navSettings = $('navSettings');
 
   // ---- INIT AVATAR SYSTEM ----
-  AvatarSystem.init({
-    avatarStrength, avatarKnowledge, avatarFocus, avatarCreativity,
-    avatarShowcaseName, avatarLevel, avatarIcon,
-    avatarLargeIcon, avatarStageName, avatarScreenLevel, avatarXP, avatarLevelBar,
-    avatarStatStrength, avatarStatKnowledge, avatarStatFocus, avatarStatCreativity,
-    cosmeticsShop
-  });
-  window.mintCoinsEl = mintCoinsEl;
+  if (typeof AvatarSystem !== 'undefined') {
+    AvatarSystem.init({
+      avatarStrength, avatarKnowledge, avatarFocus, avatarCreativity,
+      avatarShowcaseName, avatarLevel, avatarIcon,
+      avatarLargeIcon, avatarStageName, avatarScreenLevel, avatarXP, avatarLevelBar,
+      avatarStatStrength, avatarStatKnowledge, avatarStatFocus, avatarStatCreativity,
+      cosmeticsShop
+    });
+    window.mintCoinsEl = mintCoinsEl;
+  }
 
   // --- SCREEN SWITCH ---
   function showScreen(screen) {
@@ -170,7 +173,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentThemeName) currentThemeName.textContent = getThemeDisplayName(theme);
     if (myReferralCode) myReferralCode.textContent = d.referralCode || '';
     updateMentorMessage();
-    AvatarSystem.updateShowcase(d);
+    if (typeof AvatarSystem !== 'undefined') {
+      AvatarSystem.updateShowcase(d);
+    }
   }
 
   // --- HABITS ---
@@ -306,13 +311,21 @@ document.addEventListener('DOMContentLoaded', () => {
     await userDocRef.update({ totalXP: xp, level, badges, mintCoins: newCoins, mintTokens: newTokens, identity: getIdentity(xp) });
     await db.collection('leaderboard').doc(currentUser.uid).set({ username: d.username, xp }, { merge: true });
 
-    if (h.category) {
+    if (h.category && typeof AvatarSystem !== 'undefined') {
       AvatarSystem.incrementStat(h.category);
     }
     trackCombination(habitId);
     updateImpact();
     applyBossDamage();
-    await loadHabits(); renderDashboard();
+    await loadHabits();
+    renderDashboard();
+
+    // Refresh avatar showcase with updated stats
+    const updatedDoc = await userDocRef.get();
+    if (typeof AvatarSystem !== 'undefined') {
+      AvatarSystem.updateShowcase(updatedDoc.data());
+    }
+
     if (mintCoinsEl) mintCoinsEl.textContent = newCoins;
     if (mintTokensEl) mintTokensEl.textContent = newTokens;
   }
@@ -496,7 +509,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // MINT SHOP
+  // MINT SHOP (includes cosmetics)
   async function renderShop() {
     if (!shopItems || !userDocRef) return;
     try {
@@ -504,12 +517,14 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!userDoc.exists) return;
       const coins = userDoc.data().mintCoins || 0;
       const xp = userDoc.data().totalXP || 0;
-      const owned = userDoc.data().ownedThemes || [];
+      const ownedThemes = userDoc.data().ownedThemes || [];
       const currentTheme = userDoc.data().settings?.theme || 'midnight';
+      const ownedCosmetics = userDoc.data().ownedCosmetics || [];
 
       if (shopCoinBalance) shopCoinBalance.textContent = coins;
       if (shopXPDisplay) shopXPDisplay.textContent = xp;
 
+      // XP packs
       if (xpPacks) {
         xpPacks.innerHTML = xpPacksList.map(p => `
           <div class="shop-item">
@@ -535,8 +550,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       }
 
+      // Themes
       shopItems.innerHTML = shopThemes.map(theme => {
-        const isOwned = owned.includes(theme.id);
+        const isOwned = ownedThemes.includes(theme.id);
         const isCurrent = currentTheme === theme.id;
         return `<div class="shop-item">
           <div class="shop-item-info"><span class="shop-item-emoji">${theme.emoji}</span> ${theme.name}</div>
@@ -553,10 +569,10 @@ document.addEventListener('DOMContentLoaded', () => {
           const cost = parseInt(e.target.dataset.cost);
           const doc = await userDocRef.get();
           if ((doc.data().mintCoins || 0) < cost) return alert('Not enough Mint Coins');
-          const owned = doc.data().ownedThemes || [];
-          if (owned.includes(themeId)) return;
-          owned.push(themeId);
-          await userDocRef.update({ mintCoins: firebase.firestore.FieldValue.increment(-cost), ownedThemes: owned });
+          const currentOwned = doc.data().ownedThemes || [];
+          if (currentOwned.includes(themeId)) return;
+          currentOwned.push(themeId);
+          await userDocRef.update({ mintCoins: firebase.firestore.FieldValue.increment(-cost), ownedThemes: currentOwned });
           const updated = await userDocRef.get();
           if (mintCoinsEl) mintCoinsEl.textContent = updated.data().mintCoins;
           renderShop();
@@ -572,6 +588,38 @@ document.addEventListener('DOMContentLoaded', () => {
           renderShop();
         });
       });
+
+      // Cosmetics section in shop
+      if (shopCosmetics) {
+        let cosHtml = '';
+        cosmeticsList.forEach(item => {
+          const isOwned = ownedCosmetics.includes(item.id);
+          cosHtml += `<div class="shop-item">
+            <div class="shop-item-info"><span>${item.name}</span></div>
+            <button class="btn btn-small buy-cosmetic-btn" data-id="${item.id}" data-cost="${item.cost}" ${isOwned || coins < item.cost ? 'disabled' : ''}>${isOwned ? 'Owned' : `Buy ${item.cost} 🪙`}</button>
+          </div>`;
+        });
+        shopCosmetics.innerHTML = cosHtml;
+
+        // Buy handlers for cosmetics in the main shop
+        shopCosmetics.querySelectorAll('.buy-cosmetic-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const id = e.target.dataset.id;
+            const cost = parseInt(e.target.dataset.cost);
+            const doc = await userDocRef.get();
+            const currentCoins = doc.data().mintCoins || 0;
+            if (currentCoins < cost) return alert('Not enough coins');
+            const currOwned = doc.data().ownedCosmetics || [];
+            if (currOwned.includes(id)) return;
+            currOwned.push(id);
+            await userDocRef.update({
+              mintCoins: firebase.firestore.FieldValue.increment(-cost),
+              ownedCosmetics: currOwned
+            });
+            renderShop(); // refresh shop modal
+          });
+        });
+      }
     } catch (err) {
       console.error('Shop error:', err);
     }
@@ -584,7 +632,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (navDashboard) navDashboard.addEventListener('click', () => { showScreen(mainAppScreen); setActiveNav(navDashboard); });
-  if (navAvatar) navAvatar.addEventListener('click', () => { showScreen(avatarScreen); AvatarSystem.renderScreen(); setActiveNav(navAvatar); });
+  if (navAvatar) navAvatar.addEventListener('click', () => { showScreen(avatarScreen); if (typeof AvatarSystem !== 'undefined') AvatarSystem.renderScreen(); setActiveNav(navAvatar); });
   if (navBoss) navBoss.addEventListener('click', () => { showScreen(bossScreen); renderBosses(); setActiveNav(navBoss); });
   if (navProgress) navProgress.addEventListener('click', () => { showScreen(achievementsScreen); loadAchievements(); setActiveNav(navProgress); });
   if (navSettings) navSettings.addEventListener('click', () => { showScreen(settingsView); setActiveNav(navSettings); });
