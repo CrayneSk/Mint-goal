@@ -1,4 +1,4 @@
-// buttons.js
+// buttons.js – FULL VERSION
 const Buttons = {
   init() {
     const $ = id => document.getElementById(id);
@@ -14,11 +14,10 @@ const Buttons = {
     navAvatar.addEventListener('click', () => {
       App.showScreen(App.avatarScreen);
       if (!AvatarSystem.scene) {
-        // Lazy init 3D avatar
         AvatarSystem.init({
           avatarStrength: $('avatarStrength'), avatarKnowledge: $('avatarKnowledge'), avatarFocus: $('avatarFocus'), avatarCreativity: $('avatarCreativity'),
           avatarShowcaseName: $('avatarShowcaseName'), avatarLevel: $('avatarLevel'), avatarIcon: $('avatarIcon'),
-          avatarLargeIcon: $('avatarLargeIcon'), avatarStageName: $('avatarStageName'), avatarScreenLevel: $('avatarScreenLevel'), avatarXP: $('avatarXP'), avatarLevelBar: $('avatarLevelBar'),
+          avatarStageName: $('avatarStageName'), avatarScreenLevel: $('avatarScreenLevel'), avatarXP: $('avatarXP'), avatarLevelBar: $('avatarLevelBar'),
           avatarStatStrength: $('avatarStatStrength'), avatarStatKnowledge: $('avatarStatKnowledge'), avatarStatFocus: $('avatarStatFocus'), avatarStatCreativity: $('avatarStatCreativity'),
           cosmeticsShop: $('cosmeticsShop')
         });
@@ -26,8 +25,8 @@ const Buttons = {
       AvatarSystem.renderScreen();
       setActiveNav(navAvatar);
     });
-    navBoss.addEventListener('click', () => { App.showScreen(App.bossScreen); Habits.renderBosses(); setActiveNav(navBoss); });
-    navProgress.addEventListener('click', () => { App.showScreen(App.achievementsScreen); Habits.loadAchievements(); setActiveNav(navProgress); });
+    navBoss.addEventListener('click', () => { App.showScreen(App.bossScreen); App.habits.renderBosses(); setActiveNav(navBoss); });
+    navProgress.addEventListener('click', () => { App.showScreen(App.achievementsScreen); App.habits.loadAchievements(); setActiveNav(navProgress); });
     navSettings.addEventListener('click', () => { App.showScreen(App.settingsView); setActiveNav(navSettings); });
 
     // Back buttons
@@ -49,7 +48,7 @@ const Buttons = {
     $('openShopBtn')?.addEventListener('click', () => { App.shopModal.classList.add('active'); App.renderShop(); });
     $('openShopFromSettings')?.addEventListener('click', () => { App.shopModal.classList.add('active'); App.renderShop(); });
 
-    // Other modal openers (newMessage, startBoss, newChapter, howItWorks, etc.) – identical to before
+    // Other modal openers
     $('newMessageBtn')?.addEventListener('click', () => document.getElementById('messageModal')?.classList.add('active'));
     $('startBossBtn')?.addEventListener('click', () => document.getElementById('bossModal')?.classList.add('active'));
     $('newChapterBtn')?.addEventListener('click', () => document.getElementById('chapterModal')?.classList.add('active'));
@@ -77,18 +76,96 @@ const Buttons = {
     });
 
     // Add habit FAB
-    $('addHabitFAB')?.addEventListener('click', () => { /* same as old openEditHabit(null) */ });
+    $('addHabitFAB')?.addEventListener('click', () => {
+      App.habits.editingId = null;
+      document.getElementById('habitModalTitle').textContent = 'New Habit';
+      document.getElementById('habitName').value = '';
+      document.getElementById('habitCategory').value = 'health';
+      document.getElementById('habitRepeat').value = 'daily';
+      document.getElementById('reminderTimes').value = '';
+      document.getElementById('habitEmoji').value = '';
+      document.getElementById('habitNotes').value = '';
+      document.getElementById('habitRoutine').value = 'morning';
+      document.getElementById('habitChapter').value = '';
+      document.getElementById('customDaysContainer').style.display = 'none';
+      App.habits.populateChapterOptions();
+      document.getElementById('habitModal').classList.add('active');
+    });
 
-    // Habit save button
-    $('saveHabitBtn')?.addEventListener('click', async () => { /* old saveHabit logic */ });
+    // Habit repeat dropdown
+    $('habitRepeat')?.addEventListener('change', function() {
+      document.getElementById('customDaysContainer').style.display = this.value === 'custom' ? 'flex' : 'none';
+    });
 
-    // Message save button
-    $('saveMessageBtn')?.addEventListener('click', async () => { /* … */ });
+    // Save habit
+    $('saveHabitBtn')?.addEventListener('click', async () => {
+      const name = document.getElementById('habitName')?.value?.trim();
+      if (!name) return alert('Name required');
+      const repeat = document.getElementById('habitRepeat')?.value || 'daily';
+      let repeatDays = [];
+      if (repeat === 'custom') repeatDays = Array.from(document.querySelectorAll('#customDaysContainer input:checked')).map(cb => parseInt(cb.value));
+      const data = {
+        name, category: document.getElementById('habitCategory')?.value || 'health', repeat, repeatDays,
+        time: document.getElementById('reminderTimes')?.value?.split(',')[0]?.trim() || '08:00',
+        reminderTimes: document.getElementById('reminderTimes')?.value?.split(',').map(s => s.trim()).filter(Boolean) || [],
+        emoji: document.getElementById('habitEmoji')?.value || '✅', notes: document.getElementById('habitNotes')?.value || '',
+        routine: document.getElementById('habitRoutine')?.value || 'morning', chapterId: document.getElementById('habitChapter')?.value || null,
+        streak: App.habits.editingId ? (App.habits.data.find(h => h.id === App.habits.editingId)?.streak || 0) : 0,
+        lastCompletedDate: App.habits.editingId ? (App.habits.data.find(h => h.id === App.habits.editingId)?.lastCompletedDate || null) : null
+      };
+      if (App.habits.editingId) await App.userDocRef.collection('habits').doc(App.habits.editingId).update(data);
+      else await App.userDocRef.collection('habits').add(data);
+      document.getElementById('habitModal').classList.remove('active');
+      await App.habits.load();
+      App.habits.renderDashboard();
+    });
+
+    // Save message
+    $('saveMessageBtn')?.addEventListener('click', async () => {
+      const content = document.getElementById('messageContent')?.value?.trim();
+      if (!content) return;
+      const condition = document.getElementById('unlockCondition')?.value || '30days';
+      await App.userDocRef.collection('messages').add({ content, condition, createdAt: new Date().toISOString() });
+      document.getElementById('messageModal')?.classList.remove('active');
+      App.habits.renderMessages();
+    });
 
     // Start boss challenge
-    $('startBossChallengeBtn')?.addEventListener('click', async () => { /* … */ });
+    $('startBossChallengeBtn')?.addEventListener('click', async () => {
+      const name = document.getElementById('bossName')?.value?.trim();
+      const days = parseInt(document.getElementById('bossDays')?.value);
+      if (!name || !days) return alert('Fill all fields');
+      await App.userDocRef.collection('bosses').add({ name, totalDays: days, daysCompleted: 0, active: true });
+      document.getElementById('bossModal')?.classList.remove('active');
+      App.habits.renderBosses();
+    });
 
-    // Chapter save
-    $('saveChapterBtn')?.addEventListener('click', async () => { /* … */ });
+    // Save chapter
+    $('saveChapterBtn')?.addEventListener('click', async () => {
+      const name = document.getElementById('chapterName')?.value?.trim();
+      if (!name) return;
+      await App.userDocRef.collection('chapters').add({ name });
+      document.getElementById('chapterModal')?.classList.remove('active');
+      App.habits.renderChapters();
+      App.habits.populateChapterFilter();
+    });
+
+    // Copy referral code
+    $('copyReferralBtn')?.addEventListener('click', async () => {
+      const code = document.getElementById('myReferralCode')?.textContent;
+      if (code && code !== 'Loading...') {
+        await navigator.clipboard.writeText(code);
+        alert('Referral code copied!');
+      }
+    });
+
+    // Share progress
+    $('shareProgressBtn')?.addEventListener('click', async () => {
+      const doc = await App.userDocRef.get();
+      const d = doc.data();
+      const text = `I'm ${getIdentity(d.totalXP || 0)} on GoaLMint! 🚀`;
+      if (navigator.share) navigator.share({ title: 'GoaLMint', text });
+      else alert('Copy: ' + text);
+    });
   }
 };
