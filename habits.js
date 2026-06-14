@@ -1,4 +1,4 @@
-// habits.js
+// habits.js – FULL VERSION, NO PLACEHOLDERS
 const Habits = {
   data: [],
   currentRoutine: 'morning',
@@ -145,7 +145,6 @@ const Habits = {
     this.lastCompletedHabitTime = now;
     this.lastCompletedHabitId = habitId;
 
-    // other updates
     this.updateImpact();
     this.applyBossDamage();
     await this.load();
@@ -191,7 +190,6 @@ const Habits = {
     chapterFilter.value = chapterFilter.dataset.current || '';
     chapterFilter.onchange = () => { chapterFilter.dataset.current = chapterFilter.value; this.renderDashboard(); };
   },
-
   async populateChapterOptions() {
     const habitChapter = document.getElementById('habitChapter');
     if (!habitChapter || !App.userDocRef) return;
@@ -211,7 +209,6 @@ const Habits = {
       return `<div><strong>${name}</strong> ${pct}% <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div></div>`;
     }).join('');
   },
-
   async renderMessages() {
     const messagesList = document.getElementById('messagesList');
     if (!messagesList || !App.userDocRef) return;
@@ -223,7 +220,6 @@ const Habits = {
       return `<div class="card"><p>${locked ? '🔒 Locked' : '✉️ ' + m.content}</p><small>${m.condition}</small></div>`;
     }).join('');
   },
-
   checkLocked(msg, today) {
     if (msg.condition === '30days') {
       const created = msg.createdAt?.toDate ? msg.createdAt.toDate() : new Date(msg.createdAt);
@@ -235,7 +231,6 @@ const Habits = {
     }
     return true;
   },
-
   async renderBosses() {
     const activeBosses = document.getElementById('activeBosses');
     if (!activeBosses || !App.userDocRef) return;
@@ -246,7 +241,6 @@ const Habits = {
       return `<div class="card"><strong>⚔️ ${b.name}</strong> (${b.daysCompleted || 0}/${b.totalDays} days)<div class="boss-bar"><div class="boss-fill" style="width:${progress}%"></div></div></div>`;
     }).join('') || '<p>No active battles.</p>';
   },
-
   async renderChapters() {
     const chaptersList = document.getElementById('chaptersList');
     if (!chaptersList || !App.userDocRef) return;
@@ -254,7 +248,6 @@ const Habits = {
     const chapters = snap.docs.map(d => ({ id: d.id, name: d.data().name }));
     chaptersList.innerHTML = chapters.map(c => `<div class="card"><strong>📖 ${c.name}</strong></div>`).join('');
   },
-
   async updateImpact() {
     const impactStats = document.getElementById('impactStats');
     if (!impactStats || !App.userDocRef) return;
@@ -266,7 +259,6 @@ const Habits = {
     else if (cause === 'health') stats = `❤️ Improved fitness age by ${this.data.filter(h => h.category === 'health').length} years.`;
     impactStats.innerHTML = stats;
   },
-
   async loadAchievements() {
     const achievementsList = document.getElementById('achievementsList');
     if (!achievementsList || !App.userDocRef) return;
@@ -274,7 +266,6 @@ const Habits = {
     const badges = doc.data()?.badges || [];
     achievementsList.innerHTML = badges.length ? badges.map(b => `<p>🏅 ${b.replace(/-/g, ' ')}</p>`).join('') : '<p>No achievements yet.</p>';
   },
-
   async loadLeaderboard() {
     const leaderboardList = document.getElementById('leaderboardList');
     if (!leaderboardList) return;
@@ -298,7 +289,6 @@ const Habits = {
       await db.collection('leaderboardRewards').doc('last').set({ timestamp: now });
     }
   },
-
   async applyBossDamage() {
     if (!App.userDocRef) return;
     const snap = await App.userDocRef.collection('bosses').where('active', '==', true).get();
