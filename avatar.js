@@ -1,4 +1,3 @@
-// avatar.js – basic 3D test (will show a sphere + cube)
 const AvatarSystem = {
   elements: {},
   scene: null,
@@ -11,7 +10,7 @@ const AvatarSystem = {
     const container = document.getElementById('avatar3DContainer');
     if (!container) return;
 
-    // Scene
+    // Create scene
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x1a1a2e);
 
@@ -39,22 +38,23 @@ const AvatarSystem = {
     floor.position.y = -1;
     this.scene.add(floor);
 
-    // A colored sphere (head placeholder)
-    const sphere = new THREE.Mesh(
+    // Head (orange sphere)
+    const head = new THREE.Mesh(
       new THREE.SphereGeometry(0.4, 32, 32),
       new THREE.MeshStandardMaterial({ color: 0xffaa00 })
     );
-    sphere.position.y = 1.2;
-    this.scene.add(sphere);
+    head.position.y = 1.2;
+    this.scene.add(head);
 
-    // A box (body placeholder)
-    const box = new THREE.Mesh(
+    // Body (blue box)
+    const body = new THREE.Mesh(
       new THREE.BoxGeometry(0.6, 0.8, 0.4),
       new THREE.MeshStandardMaterial({ color: 0x3399ff })
     );
-    box.position.y = 0.5;
-    this.scene.add(box);
+    body.position.y = 0.5;
+    this.scene.add(body);
 
+    // Start animation
     this.animate();
   },
 
@@ -65,7 +65,6 @@ const AvatarSystem = {
     }
   },
 
-  // These functions are called by script.js, we keep them empty for now
   updateShowcase(data) {},
   async renderScreen() {},
   renderCosmeticsShop() {},
