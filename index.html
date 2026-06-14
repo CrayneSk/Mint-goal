@@ -316,25 +316,32 @@
       <input type="text" id="chapterName" placeholder="Chapter name">
       <button class="btn btn-primary" id="saveChapterBtn">Create</button>
     </div>
-  </div>
 
-  <div id="shopModal" class="modal">
-    <div class="modal-content" style="max-width:450px; max-height:80vh;">
-      <span class="close-modal" data-modal="shopModal">&times;</span>
-      <h3>🛒 Mint Shop</h3>
-      <div class="card" style="text-align:center;">
-        <p>Your Balance: 🪙 <strong id="shopCoinBalance">0</strong> | 💎 <strong id="shopXPDisplay">0</strong> XP</p>
-      </div>
-      <div class="shop-section">
-        <h4>💎 Buy XP Packs</h4>
-        <div id="xpPacks"></div>
-      </div>
-      <div class="shop-section">
-        <h4>🎨 Premium Themes (30 available)</h4>
-        <div id="shopItems"></div>
-      </div>
+  </div>
+<!-- SHOP MODAL -->
+<div id="shopModal" class="modal">
+  <div class="modal-content" style="max-width:450px; max-height:80vh;">
+    <span class="close-modal" data-modal="shopModal">&times;</span>
+    <h3>🛒 Mint Shop</h3>
+    <div class="card" style="text-align:center;">
+      <p>Your Balance: 🪙 <strong id="shopCoinBalance">0</strong> | 💎 <strong id="shopXPDisplay">0</strong> XP</p>
+    </div>
+    <div class="shop-section">
+      <h4>💎 Buy XP Packs</h4>
+      <div id="xpPacks"></div>
+    </div>
+    <div class="shop-section">
+      <h4>🎨 Premium Themes (30 available)</h4>
+      <div id="shopItems"></div>
+    </div>
+    <!-- NEW: Cosmetics section -->
+    <div class="shop-section">
+      <h4>🛍️ Avatar Cosmetics</h4>
+      <div id="shopCosmetics"></div>
     </div>
   </div>
+</div>
+
 
   <div id="replayModal" class="modal">
     <div class="modal-content">
