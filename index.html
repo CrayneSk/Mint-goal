@@ -98,10 +98,11 @@
     </div>
   </div>
 
-  <!-- AVATAR SCREEN (with canvas) -->
+  <!-- AVATAR SCREEN (3D) -->
   <div id="avatarScreen" class="screen">
     <h2>👤 Your Avatar</h2>
-<div id="avatar3DContainer" style="width:100%; height:300px; border-radius:1rem; overflow:hidden;"></div>
+    <div class="card" style="text-align:center; padding:0;">
+      <div id="avatar3DContainer" style="width:100%; height:320px; border-radius:1rem; overflow:hidden;"></div>
       <div style="font-size:1.5rem; font-weight:bold;" id="avatarStageName">Beginner</div>
       <div style="color:var(--accent); font-weight:bold;">Level <span id="avatarScreenLevel">1</span></div>
       <div style="margin-top:0.5rem;">XP: <span id="avatarXP">0</span> / 100</div>
@@ -221,7 +222,7 @@
     <button class="btn" id="backFromLeaderboard">← Back</button>
   </div>
 
-  <!-- MODALS (unchanged) -->
+  <!-- MODALS -->
   <div id="howItWorksModal" class="modal">
     <div class="modal-content" style="max-width:500px; max-height:80vh;">
       <span class="close-modal" data-modal="howItWorksModal">&times;</span>
@@ -230,7 +231,7 @@
         <p><strong>🏠 Dashboard:</strong> View today's habits, streaks, XP, coins, and tokens. Switch between Morning/Evening routines.</p>
         <p><strong>➕ Adding Habits:</strong> Tap "+" to add a new habit with category, schedule, reminders, and more.</p>
         <p><strong>✅ Completing Habits:</strong> Tap "Done" on any habit. You earn +1 Mint Coin, +10 XP, and your streak increases. <em>After the day passes, only Streak Tokens can save missed days.</em></p>
-        <p><strong>👤 Avatar System:</strong> Your avatar grows with your habits! Health → Strength, Learning → Knowledge, Productivity → Focus, Creativity → Creativity. Level up, unlock new stages (Beginner to Legend), and buy cosmetics with Mint Coins.</p>
+        <p><strong>👤 Avatar System:</strong> Your 3D avatar grows with your habits! Health → Strength, Learning → Knowledge, Productivity → Focus, Creativity → Creativity. Level up, unlock new stages (Beginner to Legend), and buy cosmetics with Mint Coins.</p>
         <p><strong>🛒 Mint Shop:</strong> Spend Mint Coins on 30 premium themes, XP packs, and avatar cosmetics. Earn coins by completing habits.</p>
         <p><strong>🛡️ Streak Insurance:</strong> Earn Streak Tokens every 7-day streak. Use 1 token to save a missed day.</p>
         <p><strong>⚔️ Boss Battles:</strong> Start a challenge. Each daily completion damages the boss. Missed days heal it. Defeat bosses for rewards!</p>
@@ -315,32 +316,30 @@
       <input type="text" id="chapterName" placeholder="Chapter name">
       <button class="btn btn-primary" id="saveChapterBtn">Create</button>
     </div>
-
   </div>
-<!-- SHOP MODAL -->
-<div id="shopModal" class="modal">
-  <div class="modal-content" style="max-width:450px; max-height:80vh;">
-    <span class="close-modal" data-modal="shopModal">&times;</span>
-    <h3>🛒 Mint Shop</h3>
-    <div class="card" style="text-align:center;">
-      <p>Your Balance: 🪙 <strong id="shopCoinBalance">0</strong> | 💎 <strong id="shopXPDisplay">0</strong> XP</p>
-    </div>
-    <div class="shop-section">
-      <h4>💎 Buy XP Packs</h4>
-      <div id="xpPacks"></div>
-    </div>
-    <div class="shop-section">
-      <h4>🎨 Premium Themes (30 available)</h4>
-      <div id="shopItems"></div>
-    </div>
-    <!-- NEW: Cosmetics section -->
-    <div class="shop-section">
-      <h4>🛍️ Avatar Cosmetics</h4>
-      <div id="shopCosmetics"></div>
+
+  <!-- SHOP MODAL (includes cosmetics) -->
+  <div id="shopModal" class="modal">
+    <div class="modal-content" style="max-width:450px; max-height:80vh;">
+      <span class="close-modal" data-modal="shopModal">&times;</span>
+      <h3>🛒 Mint Shop</h3>
+      <div class="card" style="text-align:center;">
+        <p>Your Balance: 🪙 <strong id="shopCoinBalance">0</strong> | 💎 <strong id="shopXPDisplay">0</strong> XP</p>
+      </div>
+      <div class="shop-section">
+        <h4>💎 Buy XP Packs</h4>
+        <div id="xpPacks"></div>
+      </div>
+      <div class="shop-section">
+        <h4>🎨 Premium Themes (30 available)</h4>
+        <div id="shopItems"></div>
+      </div>
+      <div class="shop-section">
+        <h4>🛍️ Avatar Cosmetics</h4>
+        <div id="shopCosmetics"></div>
+      </div>
     </div>
   </div>
-</div>
-
 
   <div id="replayModal" class="modal">
     <div class="modal-content">
@@ -370,14 +369,17 @@
   </div>
 </div>
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+<!-- Three.js for 3D avatar (only one copy) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-
-<script src="three.min.js"></script>
+<!-- Our modules (order matters) -->
 <script src="firebase.js"></script>
 <script src="shopData.js"></script>
-<script src="avatar.js"></script>   <!-- the new file below -->
+<script src="avatar.js"></script>
 <script src="utils.js"></script>
 <script src="script.js"></script>
+</body>
+</html>
