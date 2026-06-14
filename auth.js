@@ -1,5 +1,5 @@
 // auth.js
-App.auth = {
+const Auth = {
   init() {
     const loginBtn = document.getElementById('loginBtn');
     const registerBtn = document.getElementById('registerBtn');
@@ -7,12 +7,11 @@ App.auth = {
     const showRegisterBtn = document.getElementById('showRegisterBtn');
     const backToLoginBtn = document.getElementById('backToLoginBtn');
 
-    // --- Auth state listener ---
     auth.onAuthStateChanged(async user => {
       App.currentUser = user;
       if (user) {
         App.userDocRef = db.collection('users').doc(user.uid);
-        window.userDocRef = App.userDocRef;   // expose globally for avatar
+        window.userDocRef = App.userDocRef;
         await App.loadUserData();
         App.showScreen(App.mainAppScreen);
         await App.habits.load();
@@ -44,7 +43,7 @@ App.auth = {
       try {
         const cred = await auth.createUserWithEmailAndPassword(email, password);
         const uid = cred.user.uid;
-        const referralCode = App.generateReferralCode();
+        const referralCode = generateReferralCode();
         const userData = {
           email, username, age: document.getElementById('regAge').value || '', weight: document.getElementById('regWeight').value || '',
           totalXP: 0, level: 1, badges: [],
